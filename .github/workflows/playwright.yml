@@ -17,6 +17,19 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Debug lockfile context
+        run: |
+          pwd
+          node -v
+          npm -v
+          ls -la
+          echo "package.json (top):"
+          head -n 40 package.json
+          echo "package-lock.json (top):"
+          head -n 40 package-lock.json
+          echo "yaml in lockfile:"
+          npm ls yaml || true
+
       - name: Install dependencies
         run: npm ci
 
