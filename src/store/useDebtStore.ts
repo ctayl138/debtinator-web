@@ -1,0 +1,87 @@
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import type { Debt, DebtType } from '../types';
+import { localStorageAdapter } from './storage';
+
+interface DebtState {
+  debts: Debt[];
+  isLoading: boolean;
+  addDebt: (debt: Omit<Debt, 'id' | 'createdAt'>) => void;
+  updateDebt: (id: string, debt: Omit<Debt, 'id' | 'createdAt'>) => void;
+  deleteDebt: (id: string) => void;
+  getDebtById: (id: string) => Debt | undefined;
+}
+
+const generateId = () =>
+  Date.now().toString(36) + Math.random().toString(36).substring(2);
+
+export const migrateDebts = (debts: unknown[]): Debt[] => {
+  return debts.map((debt: Record<string, unknown>) => ({
+    ...(debt as Debt),
+    type: ((debt as Debt).type || 'other') as DebtType,
+  }));
+};
+
+export const useDebtStore = create<DebtState>()(
+  persist(
+    (set, get) => ({
+      debts: [],
+      isLoading: false,
+
+      addDebt: (debtData) => {
+        const newDebt: Debt = {
+          ...debtData,
+          type: debtData.type || 'other',
+          id: generateId(),
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({ debts: [...state.debts, newDebt] }));
+      },
+
+      updateDebt: (id, debtData) => {
+        set((state) => ({
+          debts: state.debts.map((debt) =>
+            debt.id === id
+              ? {
+                  ...debtData,
+                  type: debtData.type || debt.type || 'other',
+                  id,
+                  createdAt: debt.createdAt,
+                }
+              : debt
+          ),
+        }));
+      },
+
+      deleteDebt: (id) => {
+        set((state) => ({
+          debts: state.debts.filter((debt) => debt.id !== id),
+        }));
+      },
+
+      getDebtById: (id) => get().debts.find((debt) => debt.id === id),
+    }),
+    {
+      name: 'debtinator-debt-storage',
+      storage: createJSONStorage(() => localStorageAdapter),
+      migrate: (persistedState: unknown, _version: number) => {
+        const state = persistedState as { debts?: Debt[] };
+        if (state?.debts) {
+          state.debts = migrateDebts(state.debts);
+        }
+        return state as DebtState;
+      },
+    }
+  )
+);
+
+export const useDebts = () => useDebtStore((state) => state.debts);
+export const useDebtActions = () =>
+  useDebtStore(
+    useShallow((state) => ({
+      addDebt: state.addDebt,
+      updateDebt: state.updateDebt,
+      deleteDebt: state.deleteDebt,
+    }))
+  );
