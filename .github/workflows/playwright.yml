@@ -17,11 +17,8 @@ jobs:
         with:
           node-version: '24'
 
-      - name: clear cache
-        run: npm cache clean --force
-
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit msedge

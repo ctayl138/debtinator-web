@@ -33,7 +33,7 @@ A **client-side only** web app for managing personal debt and payoff plans. Buil
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 24+
 
 ## Quick start
 
