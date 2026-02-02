@@ -60,7 +60,7 @@ Open [http://localhost:5173](http://localhost:5173).
 This app is a static SPA built with Vite. Recommended free hosting: **Cloudflare Pages**.
 
 **Build settings:**
-- Build command: `npm ci && npm run build`
+- Build command: `npm install && npm run build`
 - Output directory: `dist`
 - Node version: `24`
 
