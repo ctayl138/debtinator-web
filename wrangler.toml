@@ -1,0 +1,7 @@
+# Deploy static site (Vite build output) to Cloudflare
+# Run: pnpm run build && pnpm exec wrangler deploy
+name = "debtinator-web"
+compatibility_date = "2026-02-03"
+
+[assets]
+directory = "./dist"
