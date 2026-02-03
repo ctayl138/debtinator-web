@@ -33,14 +33,15 @@ A **client-side only** web app for managing personal debt and payoff plans. Buil
 
 ## Prerequisites
 
-- Node.js 24+
+- Node.js 20+
+- pnpm 9+
 
 ## Quick start
 
 ```bash
 cd debtinator-web
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173).
@@ -49,20 +50,22 @@ Open [http://localhost:5173](http://localhost:5173).
 
 | Command            | Description                    |
 |--------------------|--------------------------------|
-| `npm run dev`      | Start dev server               |
-| `npm run build`    | Production build               |
-| `npm run preview`  | Preview production build       |
-| `npm run test:e2e` | Run Playwright E2E tests       |
-| `npm run test:e2e:ui` | Run Playwright E2E tests with UI |
+| `pnpm run dev`      | Start dev server               |
+| `pnpm run build`    | Production build               |
+| `pnpm run preview`  | Preview production build       |
+| `pnpm test:e2e` | Run Playwright E2E tests       |
+| `pnpm test:e2e:ui` | Run Playwright E2E tests with UI |
 
 ## Deployment (Cloudflare Pages)
 
 This app is a static SPA built with Vite. Recommended free hosting: **Cloudflare Pages**.
 
 **Build settings:**
-- Build command: `npm install && npm run build`
+- Build command: `pnpm install && pnpm run build`
 - Output directory: `dist`
-- Node version: `24`
+- Node version: `20`
+
+Cloudflare Pages auto-detects pnpm from `pnpm-lock.yaml`.
 
 **SPA routing:** A redirect rule is included at `public/_redirects` to route all paths to `index.html`.
 
