@@ -7,11 +7,10 @@ import {
   List,
   ListItem,
   ListItemText,
-  CircularProgress,
 } from '@mui/material';
 import { useDebts } from '@/store/useDebtStore';
 import { usePayoffFormStore } from '@/store/usePayoffFormStore';
-import type { PayoffPlan } from '@/types';
+import type { PayoffPlan, PayoffSchedule } from '@/types';
 import { calculatePayoffSchedule } from '@/utils/payoffCalculations';
 
 const INITIAL_MONTHS = 12;

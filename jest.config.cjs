@@ -25,6 +25,7 @@ module.exports = {
     '!src/types/**',
     '!src/**/__mocks__/**',
     '!src/vite-env.d.ts',
+    '!src/main.tsx',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'text-summary', 'lcov', 'html'],

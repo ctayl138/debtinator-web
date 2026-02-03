@@ -16,11 +16,50 @@ interface DebtState {
 const generateId = () =>
   Date.now().toString(36) + Math.random().toString(36).substring(2);
 
+const VALID_DEBT_TYPES: DebtType[] = ['credit_card', 'personal_loan', 'other'];
+
+function isDebtType(x: unknown): x is DebtType {
+  return typeof x === 'string' && VALID_DEBT_TYPES.includes(x as DebtType);
+}
+
+function isPlainObject(x: unknown): x is Record<string, unknown> {
+  return x !== null && typeof x === 'object' && !Array.isArray(x);
+}
+
+function parseDebtFromPersisted(value: unknown): Debt | null {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const o = value;
+  const type = isDebtType(o.type) ? o.type : 'other';
+  const id = typeof o.id === 'string' ? o.id : generateId();
+  const name = typeof o.name === 'string' ? o.name : 'Unknown';
+  const balance = typeof o.balance === 'number' && o.balance >= 0 ? o.balance : 0;
+  const interestRate =
+    typeof o.interestRate === 'number' && o.interestRate >= 0 ? o.interestRate : 0;
+  const minimumPayment =
+    typeof o.minimumPayment === 'number' && o.minimumPayment >= 0
+      ? o.minimumPayment
+      : 0;
+  const createdAt =
+    typeof o.createdAt === 'string' ? o.createdAt : new Date().toISOString();
+
+  return {
+    id,
+    name,
+    type,
+    balance,
+    interestRate,
+    minimumPayment,
+    createdAt,
+  };
+}
+
 export const migrateDebts = (debts: unknown[]): Debt[] => {
-  return debts.map((debt: Record<string, unknown>) => ({
-    ...(debt as Debt),
-    type: ((debt as Debt).type || 'other') as DebtType,
-  }));
+  if (!Array.isArray(debts)) return [];
+  return debts
+    .map(parseDebtFromPersisted)
+    .filter((d): d is Debt => d !== null);
 };
 
 export const useDebtStore = create<DebtState>()(

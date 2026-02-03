@@ -204,7 +204,7 @@ describe('migrateDebts', () => {
     expect(result[0].type).toBe('other');
   });
 
-  it('preserves existing type field', () => {
+  it('preserves existing type field (credit_card)', () => {
     const debts = [
       { id: '1', name: 'Card', type: 'credit_card', balance: 500, interestRate: 15, minimumPayment: 25 },
     ];
@@ -212,8 +212,85 @@ describe('migrateDebts', () => {
     expect(result[0].type).toBe('credit_card');
   });
 
+  it('preserves personal_loan type', () => {
+    const debts = [
+      { id: '1', name: 'Loan', type: 'personal_loan', balance: 500, interestRate: 10, minimumPayment: 25, createdAt: '2026-01-01' },
+    ];
+    const result = migrateDebts(debts);
+    expect(result[0].type).toBe('personal_loan');
+  });
+
+  it('defaults invalid type to other', () => {
+    const debts = [
+      { id: '1', name: 'X', type: 'invalid', balance: 0, interestRate: 0, minimumPayment: 0 },
+    ];
+    const result = migrateDebts(debts);
+    expect(result[0].type).toBe('other');
+  });
+
   it('handles empty array', () => {
     const result = migrateDebts([]);
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when input is not an array', () => {
+    expect(migrateDebts(null as unknown as unknown[])).toEqual([]);
+    expect(migrateDebts(undefined as unknown as unknown[])).toEqual([]);
+    expect(migrateDebts('not-array' as unknown as unknown[])).toEqual([]);
+  });
+
+  it('filters out null and non-object entries', () => {
+    const mixed = [
+      { id: '1', name: 'Valid', type: 'credit_card', balance: 100, interestRate: 0, minimumPayment: 10, createdAt: '2026-01-01' },
+      null,
+      42,
+      'string',
+    ];
+    const result = migrateDebts(mixed);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Valid');
+  });
+
+  it('uses defaults for missing id, name, createdAt', () => {
+    const legacy = [{ balance: 500, interestRate: 5, minimumPayment: 25 }];
+    const result = migrateDebts(legacy);
+    expect(result).toHaveLength(1);
+    expect(typeof result[0].id).toBe('string');
+    expect(result[0].id.length).toBeGreaterThan(0);
+    expect(result[0].name).toBe('Unknown');
+    expect(typeof result[0].createdAt).toBe('string');
+    expect(result[0].balance).toBe(500);
+  });
+
+  it('uses defaults for invalid or negative numbers', () => {
+    const legacy = [
+      {
+        id: '1',
+        name: 'X',
+        balance: -100,
+        interestRate: 'bad',
+        minimumPayment: -50,
+        createdAt: '2026-01-01',
+      },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result).toHaveLength(1);
+    expect(result[0].balance).toBe(0);
+    expect(result[0].interestRate).toBe(0);
+    expect(result[0].minimumPayment).toBe(0);
+  });
+
+  it('preserves valid createdAt when present', () => {
+    const legacy = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, createdAt: '2025-06-15T12:00:00.000Z' },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result[0].createdAt).toBe('2025-06-15T12:00:00.000Z');
+  });
+
+  it('filters out array entries (plain object check)', () => {
+    const withArray = [[1, 2, 3]]; // array is not a plain object
+    const result = migrateDebts(withArray);
     expect(result).toEqual([]);
   });
 });
@@ -256,6 +333,18 @@ describe('persist migration callback', () => {
 
       const undefinedResult = migrate(undefined, 0);
       expect(undefinedResult).toBeUndefined();
+    }
+  });
+
+  it('migrates state when debts is not an array (replaces with empty array)', () => {
+    const persistOptions = useDebtStore.persist.getOptions();
+    const migrate = persistOptions.migrate;
+
+    if (migrate) {
+      const state = { debts: 'invalid' as unknown as Debt[], isLoading: false };
+      const migratedState = migrate(state, 0) as { debts: Debt[] };
+      expect(Array.isArray(migratedState.debts)).toBe(true);
+      expect(migratedState.debts).toHaveLength(0);
     }
   });
 });
