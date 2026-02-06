@@ -42,6 +42,26 @@ describe('ImportDialog', () => {
     expect(screen.getByRole('button', { name: /choose file/i })).toBeInTheDocument();
   });
 
+  it('calls setImportText when textarea text is changed', async () => {
+    const user = userEvent.setup();
+    const mockSetImportText = jest.fn();
+
+    render(
+      <ImportDialog
+        {...defaultProps}
+        importText="initial text"
+        setImportText={mockSetImportText}
+      />
+    );
+
+    // MUI TextField wraps the textarea, so we need to find it within the TestID
+    const textfield = screen.getByTestId('import-paste-input');
+    const textarea = within(textfield).getByRole('textbox');
+    await user.type(textarea, ' added');
+
+    expect(mockSetImportText).toHaveBeenCalled();
+  });
+
   it('calls onFileChange when file input changes', async () => {
     const user = userEvent.setup();
     const mockFileChange = jest.fn();
