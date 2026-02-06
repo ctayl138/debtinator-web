@@ -166,4 +166,54 @@ describe('DebtForm', () => {
       })
     );
   });
+
+  it('includes tag in onSubmit when provided', () => {
+    const onSubmit = jest.fn();
+    render(wrap(<DebtForm open onSubmit={onSubmit} onCancel={jest.fn()} />));
+    fireEvent.change(screen.getByTestId('debt-form-name'), { target: { value: 'Card' } });
+    fireEvent.change(screen.getByTestId('debt-form-balance'), { target: { value: '1000' } });
+    fireEvent.change(screen.getByLabelText(/Interest Rate/i), { target: { value: '18' } });
+    fireEvent.change(screen.getByLabelText(/Minimum Payment/i), { target: { value: '50' } });
+    fireEvent.change(screen.getByTestId('debt-form-tag'), { target: { value: '  Medical  ' } });
+    fireEvent.click(screen.getByText('Add Debt'));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Card',
+        tag: 'Medical',
+      })
+    );
+  });
+
+  it('includes dueDay in onSubmit when valid (1-31)', () => {
+    const onSubmit = jest.fn();
+    render(wrap(<DebtForm open onSubmit={onSubmit} onCancel={jest.fn()} />));
+    fireEvent.change(screen.getByTestId('debt-form-name'), { target: { value: 'Card' } });
+    fireEvent.change(screen.getByTestId('debt-form-balance'), { target: { value: '1000' } });
+    fireEvent.change(screen.getByLabelText(/Interest Rate/i), { target: { value: '18' } });
+    fireEvent.change(screen.getByLabelText(/Minimum Payment/i), { target: { value: '50' } });
+    fireEvent.change(screen.getByTestId('debt-form-due-day'), { target: { value: '15' } });
+    fireEvent.click(screen.getByText('Add Debt'));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Card',
+        dueDay: 15,
+      })
+    );
+  });
+
+  it('omits dueDay from onSubmit when invalid', () => {
+    const onSubmit = jest.fn();
+    render(wrap(<DebtForm open onSubmit={onSubmit} onCancel={jest.fn()} />));
+    fireEvent.change(screen.getByTestId('debt-form-name'), { target: { value: 'Card' } });
+    fireEvent.change(screen.getByTestId('debt-form-balance'), { target: { value: '1000' } });
+    fireEvent.change(screen.getByLabelText(/Interest Rate/i), { target: { value: '18' } });
+    fireEvent.change(screen.getByLabelText(/Minimum Payment/i), { target: { value: '50' } });
+    fireEvent.change(screen.getByTestId('debt-form-due-day'), { target: { value: '0' } });
+    fireEvent.click(screen.getByText('Add Debt'));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        dueDay: expect.anything(),
+      })
+    );
+  });
 });

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -16,19 +16,16 @@ import {
   Button,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useDebts, useDebtActions } from '@/store/useDebtStore';
 import DebtForm from '@/components/DebtForm';
+import ImportDialog from '@/components/ImportDialog';
+import { useImportDialog } from '@/hooks/useImportDialog';
 import type { Debt, DebtType } from '@/types';
+import { formatCurrency } from '@/utils/formatters';
+import { DEBT_TYPE_LABELS, Z_INDEX_FAB } from '@/utils/constants';
 
 const DEBT_TYPE_ORDER: DebtType[] = ['credit_card', 'personal_loan', 'other'];
-const DEBT_TYPE_LABELS: Record<DebtType, string> = {
-  credit_card: 'Credit Cards',
-  personal_loan: 'Personal Loans',
-  other: 'Other',
-};
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
 export default function Debts() {
   const debts = useDebts();
@@ -36,6 +33,19 @@ export default function Debts() {
   const [showForm, setShowForm] = useState(false);
   const [editingDebt, setEditingDebt] = useState<Debt | undefined>();
   const [deletingDebt, setDeletingDebt] = useState<Debt | undefined>();
+
+  // Import dialog state management
+  const {
+    importOpen,
+    importText,
+    importResult,
+    fileInputRef,
+    setImportText,
+    handleImportPreview,
+    handleImportFile,
+    openImport,
+    closeImport,
+  } = useImportDialog();
 
   const summary = useMemo(() => {
     const totalBalance = debts.reduce((sum, d) => sum + d.balance, 0);
@@ -77,6 +87,37 @@ export default function Debts() {
     }
   };
 
+  const handleImportConfirm = () => {
+    if (importResult?.rows.length) {
+      importResult.rows.forEach((row) =>
+        addDebt({
+          name: row.name,
+          type: row.type,
+          balance: row.balance,
+          interestRate: row.interestRate,
+          minimumPayment: row.minimumPayment,
+          ...(row.tag && { tag: row.tag }),
+        })
+      );
+      closeImport();
+    }
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'n' && e.key !== 'N') return;
+      const target = e.target as HTMLElement;
+      const inInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      if (!inInput) {
+        e.preventDefault();
+        setEditingDebt(undefined);
+        setShowForm(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   if (debts.length === 0 && !showForm) {
     return (
       <Box
@@ -88,11 +129,29 @@ export default function Debts() {
         gap={2}
         data-testid="debts-empty"
       >
-        <Typography variant="h6">No Debts Yet</Typography>
-        <Typography color="text.secondary">Add your first debt to get started</Typography>
-        <Fab color="primary" onClick={() => setShowForm(true)} aria-label="Add debt" data-testid="add-debt-fab">
-          <AddIcon />
-        </Fab>
+        <Typography variant="h6">No debts yet</Typography>
+        <Typography color="text.secondary" textAlign="center">
+          Add your first debt with the + button, or import from a CSV to get started.
+        </Typography>
+        <Box display="flex" gap={1} flexWrap="wrap" justifyContent="center">
+          <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={openImport} data-testid="import-debts-btn">
+            Import from CSV
+          </Button>
+          <Fab color="primary" onClick={() => setShowForm(true)} aria-label="Add debt" data-testid="add-debt-fab">
+            <AddIcon />
+          </Fab>
+        </Box>
+        <ImportDialog
+          open={importOpen}
+          onClose={closeImport}
+          importText={importText}
+          setImportText={setImportText}
+          importResult={importResult}
+          onPreview={handleImportPreview}
+          onFileChange={handleImportFile}
+          onConfirm={handleImportConfirm}
+          fileInputRef={fileInputRef}
+        />
       </Box>
     );
   }
@@ -102,15 +161,28 @@ export default function Debts() {
       {debts.length > 0 && (
         <Card sx={{ mb: 2 }} data-testid="debts-summary">
           <CardContent>
-            <Typography color="text.secondary" variant="subtitle1">
-              Total Debt
-            </Typography>
-            <Typography variant="h5">{formatCurrency(summary.totalBalance)}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {summary.count} {summary.count === 1 ? 'debt' : 'debts'} · Min payment:{' '}
-              {formatCurrency(summary.totalMinimumPayments)} · Avg APR:{' '}
-              {summary.weightedInterestRate.toFixed(2)}%
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
+              <Box>
+                <Typography color="text.secondary" variant="subtitle1">
+                  Total Debt
+                </Typography>
+                <Typography variant="h5">{formatCurrency(summary.totalBalance)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {summary.count} {summary.count === 1 ? 'debt' : 'debts'} · Min payment:{' '}
+                  {formatCurrency(summary.totalMinimumPayments)} · Avg APR:{' '}
+                  {summary.weightedInterestRate.toFixed(2)}%
+                </Typography>
+              </Box>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<UploadFileIcon />}
+                onClick={openImport}
+                data-testid="import-debts-btn"
+              >
+                Import
+              </Button>
+            </Box>
           </CardContent>
         </Card>
       )}
@@ -134,11 +206,25 @@ export default function Debts() {
                   }}
                 >
                   <ListItemText
-                    primary={item.name}
+                    primary={
+                      <>
+                        {item.name}
+                        {item.tag && (
+                          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                            · {item.tag}
+                          </Typography>
+                        )}
+                      </>
+                    }
                     secondary={
                       <>
                         {formatCurrency(item.balance)} · {item.interestRate.toFixed(2)}% APR · Min{' '}
                         {formatCurrency(item.minimumPayment)}
+                        {item.dueDay != null && (
+                          <Typography component="span" variant="caption" color="text.secondary" display="block">
+                            Due day: {item.dueDay}
+                          </Typography>
+                        )}
                       </>
                     }
                     primaryTypographyProps={{ fontWeight: 600 }}
@@ -152,7 +238,7 @@ export default function Debts() {
 
       <Fab
         color="primary"
-        sx={{ position: 'fixed', right: 16, bottom: 72, zIndex: 1100 }}
+        sx={{ position: 'fixed', right: 16, bottom: 72, zIndex: Z_INDEX_FAB }}
         onClick={() => {
           setEditingDebt(undefined);
           setShowForm(true);
@@ -181,6 +267,18 @@ export default function Debts() {
               }
             : undefined
         }
+      />
+
+      <ImportDialog
+        open={importOpen}
+        onClose={closeImport}
+        importText={importText}
+        setImportText={setImportText}
+        importResult={importResult}
+        onPreview={handleImportPreview}
+        onFileChange={handleImportFile}
+        onConfirm={handleImportConfirm}
+        fileInputRef={fileInputRef}
       />
 
       <Dialog open={!!deletingDebt} onClose={() => setDeletingDebt(undefined)} data-testid="delete-debt-dialog">

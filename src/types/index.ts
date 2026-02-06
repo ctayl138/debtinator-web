@@ -8,6 +8,10 @@ export interface Debt {
   interestRate: number;
   minimumPayment: number;
   createdAt: string;
+  /** Optional tag for grouping (e.g. "medical", "cards") */
+  tag?: string;
+  /** Optional due day of month (1-31) for payment reminders */
+  dueDay?: number;
 }
 
 export type PayoffMethod = 'snowball' | 'avalanche' | 'custom';

@@ -25,7 +25,7 @@ export class PayoffPage extends BasePage {
     await expect(
       this.emptyState
         .or(this.methodCard)
-        .or(this.getByText(/payoff method|no debts to plan/i))
+        .or(this.getByText(/payoff method|no debts yet/i))
         .first()
     ).toBeVisible({ timeout: 10000 });
   }
@@ -36,7 +36,7 @@ export class PayoffPage extends BasePage {
 
   async selectMethod(method: 'snowball' | 'avalanche' | 'custom'): Promise<void> {
     const methodText = method.charAt(0).toUpperCase() + method.slice(1);
-    await this.getByText(methodText).click();
+    await this.getByRole('button', { name: methodText }).click();
   }
 
   async setMonthlyPayment(amount: string): Promise<void> {
@@ -63,7 +63,7 @@ export class PayoffPage extends BasePage {
 
   async assertEmptyState(): Promise<void> {
     await expect(this.emptyState).toBeVisible();
-    await expect(this.getByText(/no debts to plan/i)).toBeVisible();
+    await expect(this.getByText(/no debts yet/i)).toBeVisible();
   }
 
   async assertMethodSelectorVisible(): Promise<void> {
@@ -78,7 +78,7 @@ export class PayoffPage extends BasePage {
     const descriptions: Record<string, RegExp> = {
       snowball: /smallest balances first/i,
       avalanche: /highest interest rates first/i,
-      custom: /choose your own/i,
+      custom: /set the order/i,
     };
     await expect(this.getByText(descriptions[method])).toBeVisible();
   }
@@ -91,8 +91,8 @@ export class PayoffPage extends BasePage {
 
   async assertSummaryVisible(): Promise<void> {
     await expect(this.getByText('Payoff Summary')).toBeVisible({ timeout: 5000 });
-    await expect(this.getByText(/time to payoff/i)).toBeVisible();
-    await expect(this.getByText(/total interest/i)).toBeVisible();
+    await expect(this.getByText(/time to payoff:/i)).toBeVisible();
+    await expect(this.getByText(/total interest:/i)).toBeVisible();
   }
 
   async assertMenuButtonVisible(): Promise<void> {

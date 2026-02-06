@@ -48,6 +48,36 @@ describe('Layout', () => {
     expect(screen.getByText('Debts')).toBeInTheDocument();
     expect(screen.getByText('Payoff')).toBeInTheDocument();
   });
+
+  it('opens shortcuts dialog when ? key is pressed', () => {
+    const { container } = renderLayout('/');
+    fireEvent.keyDown(container.ownerDocument, { key: '?' });
+    expect(screen.getByTestId('shortcuts-dialog')).toBeInTheDocument();
+    expect(screen.getByText('Keyboard shortcuts')).toBeInTheDocument();
+  });
+
+  it('shows shortcut list items when shortcuts dialog is open', () => {
+    const { container } = renderLayout('/');
+    fireEvent.keyDown(container.ownerDocument, { key: '?' });
+    expect(screen.getByText('Show keyboard shortcuts')).toBeInTheDocument();
+    expect(screen.getByText('Add new debt (on Debts page)')).toBeInTheDocument();
+  });
+
+  it('does not open shortcuts dialog when ? is pressed in input', () => {
+    renderLayout('/');
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+    fireEvent.keyDown(input, { key: '?' });
+    expect(screen.queryByTestId('shortcuts-dialog')).not.toBeInTheDocument();
+    document.body.removeChild(input);
+  });
+
+  it('ignores other keys for shortcuts dialog', () => {
+    const { container } = renderLayout('/');
+    fireEvent.keyDown(container.ownerDocument, { key: 'a' });
+    expect(screen.queryByTestId('shortcuts-dialog')).not.toBeInTheDocument();
+  });
 });
 
 function renderLayout(route: string) {

@@ -13,8 +13,14 @@ jest.mock('@/store/useDebtStore', () => ({
   useDebts: () => mockDebts,
 }));
 
+let mockStartDate = '';
 jest.mock('@/store/usePayoffFormStore', () => ({
-  usePayoffFormStore: () => ({ method: mockMethod, monthlyPayment: mockMonthlyPayment }),
+  usePayoffFormStore: () => ({
+    method: mockMethod,
+    monthlyPayment: mockMonthlyPayment,
+    customOrder: [],
+    startDate: mockStartDate,
+  }),
 }));
 
 let mockSchedule = {
@@ -44,6 +50,7 @@ describe('PayoffTimeline', () => {
     mockDebts = [];
     mockMethod = 'snowball';
     mockMonthlyPayment = '';
+    mockStartDate = '';
     mockSchedule = {
       totalMonths: 13,
       totalInterest: 200,
@@ -65,14 +72,14 @@ describe('PayoffTimeline', () => {
 
   it('renders empty state when no debts', () => {
     renderWithProviders(<PayoffTimeline />);
-    expect(screen.getByText('Add debts first to see the timeline')).toBeInTheDocument();
+    expect(screen.getByText(/Add debts on the Debts tab, then set a monthly payment on the Payoff tab to see your timeline/)).toBeInTheDocument();
   });
 
   it('renders set payment message when payment too low', () => {
     mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 50, createdAt: '' }];
     mockMonthlyPayment = '30';
     renderWithProviders(<PayoffTimeline />);
-    expect(screen.getByText(/Set a monthly payment on the Payoff tab/)).toBeInTheDocument();
+    expect(screen.getByText(/Enter a monthly payment.*Payoff tab to see your month-by-month schedule/)).toBeInTheDocument();
   });
 
   it('renders timeline and load more button when schedule exists', () => {
@@ -91,6 +98,15 @@ describe('PayoffTimeline', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Load more months' }));
     expect(screen.getByText(/Month 13/)).toBeInTheDocument();
     expect(screen.getByText(/You're debt-free in 13 months/)).toBeInTheDocument();
+  });
+
+  it('uses startDate for month labels when set', () => {
+    mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' }];
+    mockMonthlyPayment = '100';
+    mockStartDate = '2027-03-01';
+    renderWithProviders(<PayoffTimeline />);
+    expect(screen.getByTestId('payoff-timeline')).toBeInTheDocument();
+    expect(screen.getByText(/March 2027/)).toBeInTheDocument();
   });
 
   it('shows debt-free message when all months are visible', () => {

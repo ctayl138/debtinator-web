@@ -44,6 +44,12 @@ function parseDebtFromPersisted(value: unknown): Debt | null {
   const createdAt =
     typeof o.createdAt === 'string' ? o.createdAt : new Date().toISOString();
 
+  const tag = typeof o.tag === 'string' && o.tag.trim() ? o.tag.trim() : undefined;
+  const dueDayRaw = o.dueDay;
+  const dueDay =
+    typeof dueDayRaw === 'number' && dueDayRaw >= 1 && dueDayRaw <= 31
+      ? Math.floor(dueDayRaw)
+      : undefined;
   return {
     id,
     name,
@@ -52,6 +58,8 @@ function parseDebtFromPersisted(value: unknown): Debt | null {
     interestRate,
     minimumPayment,
     createdAt,
+    ...(tag !== undefined && { tag }),
+    ...(dueDay !== undefined && { dueDay }),
   };
 }
 
@@ -74,6 +82,8 @@ export const useDebtStore = create<DebtState>()(
           type: debtData.type || 'other',
           id: generateId(),
           createdAt: new Date().toISOString(),
+          ...(debtData.tag !== undefined && { tag: debtData.tag }),
+          ...(debtData.dueDay !== undefined && { dueDay: debtData.dueDay }),
         };
         set((state) => ({ debts: [...state.debts, newDebt] }));
       },
@@ -87,6 +97,8 @@ export const useDebtStore = create<DebtState>()(
                   type: debtData.type || debt.type || 'other',
                   id,
                   createdAt: debt.createdAt,
+                  ...(debtData.tag !== undefined && { tag: debtData.tag }),
+                  ...(debtData.dueDay !== undefined && { dueDay: debtData.dueDay }),
                 }
               : debt
           ),

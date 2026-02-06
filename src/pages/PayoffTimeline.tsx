@@ -19,9 +19,11 @@ const LOAD_MORE = 12;
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-function getMonthYear(monthIndex: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + monthIndex);
+/** monthIndex is 1-based (month 1 = first payment). baseDate YYYY-MM-DD or empty for current month. */
+function getMonthYear(monthIndex: number, baseDate?: string): string {
+  const d = baseDate ? new Date(baseDate + 'T12:00:00') : new Date();
+  if (!baseDate) d.setMonth(d.getMonth() + monthIndex);
+  else d.setMonth(d.getMonth() + monthIndex - 1);
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
@@ -35,7 +37,7 @@ export function getNextVisibleMonths(
 
 export default function PayoffTimeline() {
   const debts = useDebts();
-  const { method, monthlyPayment } = usePayoffFormStore();
+  const { method, monthlyPayment, customOrder, startDate } = usePayoffFormStore();
   const [visibleMonths, setVisibleMonths] = useState(INITIAL_MONTHS);
 
   const totalMinimumPayments = useMemo(
@@ -43,12 +45,25 @@ export default function PayoffTimeline() {
     [debts]
   );
 
+  const orderedIds = useMemo(() => {
+    const order = customOrder ?? [];
+    const debtIds = new Set(debts.map((d) => d.id));
+    const existing = order.filter((id) => debtIds.has(id));
+    const added = debts.map((d) => d.id).filter((id) => !order.includes(id));
+    return existing.length > 0 || added.length > 0 ? [...existing, ...added] : [...debts].sort((a, b) => a.balance - b.balance).map((d) => d.id);
+  }, [debts, customOrder]);
+
   const schedule = useMemo(() => {
     const payment = parseFloat(monthlyPayment) || 0;
     if (debts.length === 0 || payment < totalMinimumPayments) return null;
-    const plan: PayoffPlan = { method, monthlyPayment: payment, debts };
+    const plan: PayoffPlan = {
+      method,
+      monthlyPayment: payment,
+      debts,
+      customOrder: method === 'custom' ? orderedIds : undefined,
+    };
     return calculatePayoffSchedule(plan);
-  }, [debts, method, monthlyPayment, totalMinimumPayments]);
+  }, [debts, method, monthlyPayment, totalMinimumPayments, orderedIds]);
 
   const displayedMonths = useMemo(() => {
     if (!schedule) return [];
@@ -63,17 +78,19 @@ export default function PayoffTimeline() {
 
   if (debts.length === 0) {
     return (
-      <Box py={4} textAlign="center">
-        <Typography color="text.secondary">Add debts first to see the timeline</Typography>
+      <Box py={4} textAlign="center" data-testid="timeline-empty">
+        <Typography color="text.secondary">
+          Add debts on the Debts tab, then set a monthly payment on the Payoff tab to see your timeline here.
+        </Typography>
       </Box>
     );
   }
 
   if (!schedule) {
     return (
-      <Box py={4} textAlign="center">
+      <Box py={4} textAlign="center" data-testid="timeline-no-plan">
         <Typography color="text.secondary">
-          Set a monthly payment on the Payoff tab to see the month-by-month schedule
+          Enter a monthly payment (at least the total of your minimums) on the Payoff tab to see your month-by-month schedule.
         </Typography>
       </Box>
     );
@@ -95,7 +112,7 @@ export default function PayoffTimeline() {
       <List>
         {displayedMonths.map((monthSteps, idx) => {
           const month = idx + 1;
-          const monthLabel = getMonthYear(month);
+          const monthLabel = getMonthYear(month, startDate || undefined);
           const totalPaid = monthSteps.reduce((sum, s) => sum + s.payment, 0);
           const totalInterest = monthSteps.reduce((sum, s) => sum + s.interestPaid, 0);
           return (

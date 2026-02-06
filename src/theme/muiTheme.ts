@@ -29,6 +29,11 @@ export function getAppTheme(mode: PaletteMode) {
           root: { textTransform: 'none' },
         },
       },
+      MuiDialog: {
+        styleOverrides: {
+          paper: { maxWidth: 'sm', width: '100%' },
+        },
+      },
     },
   });
 }

@@ -103,9 +103,9 @@ Create a strategic plan to become debt-free from the **Payoff** tab.
 **Pros**: Mathematically optimal; saves money long-term.  
 **Cons**: May take longer to see debts fully eliminated.
 
-#### Custom Method (Coming Soon)
+#### Custom Method
 
-Define your own priority order based on personal preferences.
+Define your own payoff order: choose which debt to pay first, second, and so on. Use the **Custom** toggle, then use the up/down arrows to reorder the list. Your order is saved with your plan.
 
 ### Setting Up Your Payoff Plan
 
@@ -230,7 +230,7 @@ All data is stored **only in your browser** using localStorage:
 - Debts are saved automatically and persist across sessions
 - Theme preference is remembered
 - Income (if set) is saved
-- Payoff method and monthly payment are in-memory (reset when you close the tab)
+- Payoff method, monthly payment, and custom order are saved automatically
 
 > **Important**: Clearing your browser data (cookies/storage) will remove your debts and settings. There is no cloud backup. Export to Excel if you want a backup.
 
@@ -246,6 +246,8 @@ From the menu, click **Features Guide** to open the in-app documentation page wi
 
 | Shortcut | Action |
 |----------|--------|
+| `?` | Show keyboard shortcuts help |
+| `N` | New debt (when on Debts tab) |
 | `Tab` | Navigate between form fields |
 | `Enter` | Submit forms |
 | `Escape` | Close dialogs |

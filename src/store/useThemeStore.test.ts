@@ -12,12 +12,31 @@ describe('useThemeStore', () => {
     expect(result.current.mode).toBe('system');
   });
 
-  it('setMode updates mode', () => {
+  it('setMode updates mode to dark', () => {
     const { result } = renderHook(() => useThemeStore());
     act(() => {
       result.current.setMode('dark');
     });
     expect(result.current.mode).toBe('dark');
+  });
+
+  it('setMode updates mode to light', () => {
+    const { result } = renderHook(() => useThemeStore());
+    act(() => {
+      result.current.setMode('dark');
+    });
+    act(() => {
+      result.current.setMode('light');
+    });
+    expect(result.current.mode).toBe('light');
+  });
+
+  it('setMode updates mode to system', () => {
+    const { result } = renderHook(() => useThemeStore());
+    act(() => {
+      result.current.setMode('system');
+    });
+    expect(result.current.mode).toBe('system');
   });
 
   it('persist.clearStorage removes persisted data', async () => {

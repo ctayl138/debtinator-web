@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { Debt, PayoffMethod, PayoffSchedule, PayoffStep } from '../types';
 import { calculatePayoffSchedule, getDebtSummary } from './payoffCalculations';
+import { DEBT_TYPE_LABELS, PAYOFF_METHOD_LABELS_EXTENDED as PAYOFF_METHOD_LABELS } from './constants';
 
 export interface ExportData {
   debts: Debt[];
@@ -9,18 +10,6 @@ export interface ExportData {
   monthlyPayment: number;
   customOrder?: string[];
 }
-
-const DEBT_TYPE_LABELS: Record<string, string> = {
-  credit_card: 'Credit Card',
-  personal_loan: 'Personal Loan',
-  other: 'Other',
-};
-
-const PAYOFF_METHOD_LABELS: Record<PayoffMethod, string> = {
-  snowball: 'Snowball (smallest balance first)',
-  avalanche: 'Avalanche (highest interest first)',
-  custom: 'Custom',
-};
 
 export function createExportWorkbook(data: ExportData): XLSX.WorkBook {
   const wb = XLSX.utils.book_new();

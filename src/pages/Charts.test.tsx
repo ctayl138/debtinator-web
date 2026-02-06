@@ -37,8 +37,13 @@ jest.mock('@/store/useDebtStore', () => ({
   useDebts: () => mockDebts,
 }));
 
+let mockCustomOrder: string[] | undefined = [];
 jest.mock('@/store/usePayoffFormStore', () => ({
-  usePayoffFormStore: () => ({ method: mockMethod, monthlyPayment: mockMonthlyPayment }),
+  usePayoffFormStore: () => ({
+    method: mockMethod,
+    monthlyPayment: mockMonthlyPayment,
+    customOrder: mockCustomOrder,
+  }),
 }));
 
 let mockSchedule = {
@@ -56,6 +61,7 @@ describe('Charts', () => {
     mockDebts = [];
     mockMethod = 'snowball';
     mockMonthlyPayment = '';
+    mockCustomOrder = [];
     mockSchedule = {
       totalMonths: 12,
       totalInterest: 500,
@@ -66,14 +72,14 @@ describe('Charts', () => {
 
   it('renders empty state when no debts', () => {
     renderWithProviders(<Charts />);
-    expect(screen.getByText('Add debts first to see charts')).toBeInTheDocument();
+    expect(screen.getByText(/Add debts on the Debts tab, then create a payoff plan to see/)).toBeInTheDocument();
   });
 
   it('renders set payment message when payment too low', () => {
     mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 50, createdAt: '' }];
     mockMonthlyPayment = '30';
     renderWithProviders(<Charts />);
-    expect(screen.getByText(/Set a monthly payment on the Payoff tab/)).toBeInTheDocument();
+    expect(screen.getByText(/Enter a monthly payment of at least/)).toBeInTheDocument();
     expect(screen.getByText(/\$50\.00/)).toBeInTheDocument();
   });
 
@@ -119,6 +125,26 @@ describe('Charts', () => {
     renderWithProviders(<Charts />);
     fireEvent.click(screen.getByText('Balance Over Time'));
     expect(screen.queryByTestId('line-chart')).not.toBeInTheDocument();
+  });
+
+  it('uses customOrder when method is custom', () => {
+    mockDebts = [
+      { id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' },
+      { id: '2', name: 'Loan', type: 'personal_loan', balance: 500, interestRate: 10, minimumPayment: 25, createdAt: '' },
+    ];
+    mockMethod = 'custom';
+    mockCustomOrder = ['2', '1'];
+    mockMonthlyPayment = '100';
+    renderWithProviders(<Charts />);
+    expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
+  });
+
+  it('handles null customOrder with fallback to sorted by balance', () => {
+    mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' }];
+    mockCustomOrder = undefined;
+    mockMonthlyPayment = '100';
+    renderWithProviders(<Charts />);
+    expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
   });
 });
 

@@ -39,14 +39,23 @@ export default function DebtForm({
   const [minimumPayment, setMinimumPayment] = useState(
     debt?.minimumPayment.toString() ?? ''
   );
+  const [tag, setTag] = useState(debt?.tag ?? '');
+  const [dueDay, setDueDay] = useState(debt?.dueDay?.toString() ?? '');
 
   const handleSubmit = () => {
+    const dueDayNum = dueDay.trim() ? parseInt(dueDay, 10) : undefined;
+    const validDueDay =
+      dueDayNum != null && !isNaN(dueDayNum) && dueDayNum >= 1 && dueDayNum <= 31
+        ? dueDayNum
+        : undefined;
     onSubmit({
       name: name.trim(),
       type,
       balance: parseFloat(balance),
       interestRate: parseFloat(interestRate),
       minimumPayment: parseFloat(minimumPayment),
+      ...(tag.trim() && { tag: tag.trim() }),
+      ...(validDueDay !== undefined && { dueDay: validDueDay }),
     });
   };
 
@@ -113,6 +122,25 @@ export default function DebtForm({
             fullWidth
             inputProps={{ inputMode: 'decimal', min: 0, step: 0.01 }}
             InputProps={{ startAdornment: '$' }}
+          />
+
+          <TextField
+            label="Tag (optional)"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            placeholder="e.g., medical, cards"
+            fullWidth
+            inputProps={{ 'data-testid': 'debt-form-tag' }}
+          />
+
+          <TextField
+            label="Due day of month (optional)"
+            value={dueDay}
+            onChange={(e) => setDueDay(e.target.value)}
+            placeholder="1-31"
+            fullWidth
+            type="number"
+            inputProps={{ min: 1, max: 31, 'data-testid': 'debt-form-due-day' }}
           />
 
           {debt && onDelete && (

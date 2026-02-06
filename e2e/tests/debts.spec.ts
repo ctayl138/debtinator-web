@@ -32,7 +32,7 @@ test.describe('Debts - List and Summary', () => {
     const [creditCard, personalLoan] = createMultiDebtScenario();
     await debtsPage.addDebt(creditCard);
     await debtsPage.addDebt(personalLoan);
-    await debtsPage.assertSectionHeaders(['Credit Cards', 'Personal Loans']);
+    await debtsPage.assertSectionHeaders(['Credit Card', 'Personal Loan']);
   });
 });
 

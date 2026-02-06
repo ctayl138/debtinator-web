@@ -15,28 +15,15 @@ import { useDebts } from '@/store/useDebtStore';
 import { usePayoffFormStore } from '@/store/usePayoffFormStore';
 import type { PayoffPlan } from '@/types';
 import { calculatePayoffSchedule } from '@/utils/payoffCalculations';
+import { formatCurrency, formatYAxisLabel, getMonthYearLabel } from '@/utils/formatters';
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
-function getMonthYearLabel(monthIndex: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + monthIndex);
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-}
-
-export function formatYAxisLabel(value: number): string {
-  if (value === 0) return '$0';
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
-  return `$${Math.round(value)}`;
-}
+// Re-export for backward compatibility
+export { formatYAxisLabel };
 
 export default function Charts() {
   const theme = useTheme();
   const debts = useDebts();
-  const { method, monthlyPayment } = usePayoffFormStore();
+  const { method, monthlyPayment, customOrder } = usePayoffFormStore();
   const [chartView, setChartView] = useState<'pie' | 'line'>('pie');
 
   const totalMinimumPayments = useMemo(
@@ -44,12 +31,25 @@ export default function Charts() {
     [debts]
   );
 
+  const orderedIds = useMemo(() => {
+    const order = customOrder ?? [];
+    const debtIds = new Set(debts.map((d) => d.id));
+    const existing = order.filter((id) => debtIds.has(id));
+    const added = debts.map((d) => d.id).filter((id) => !order.includes(id));
+    return existing.length > 0 || added.length > 0 ? [...existing, ...added] : [...debts].sort((a, b) => a.balance - b.balance).map((d) => d.id);
+  }, [debts, customOrder]);
+
   const schedule = useMemo(() => {
     const payment = parseFloat(monthlyPayment) || 0;
     if (debts.length === 0 || payment < totalMinimumPayments) return null;
-    const plan: PayoffPlan = { method, monthlyPayment: payment, debts };
+    const plan: PayoffPlan = {
+      method,
+      monthlyPayment: payment,
+      debts,
+      customOrder: method === 'custom' ? orderedIds : undefined,
+    };
     return calculatePayoffSchedule(plan);
-  }, [debts, method, monthlyPayment, totalMinimumPayments]);
+  }, [debts, method, monthlyPayment, totalMinimumPayments, orderedIds]);
 
   const initialTotalBalance = useMemo(
     () => debts.reduce((sum, d) => sum + d.balance, 0),
@@ -87,7 +87,9 @@ export default function Charts() {
   if (debts.length === 0) {
     return (
       <Box py={4} textAlign="center">
-        <Typography color="text.secondary">Add debts first to see charts</Typography>
+        <Typography color="text.secondary">
+          Add debts on the Debts tab, then create a payoff plan to see principal vs interest and balance-over-time charts here.
+        </Typography>
       </Box>
     );
   }
@@ -96,7 +98,7 @@ export default function Charts() {
     return (
       <Box py={4} textAlign="center">
         <Typography color="text.secondary">
-          Set a monthly payment on the Payoff tab (at least {formatCurrency(totalMinimumPayments)}) to see charts
+          Enter a monthly payment of at least {formatCurrency(totalMinimumPayments)} on the Payoff tab to see your charts.
         </Typography>
       </Box>
     );

@@ -1,4 +1,5 @@
 import type { Debt, PayoffPlan, PayoffSchedule, PayoffStep } from '../types';
+import { MAX_PAYOFF_MONTHS } from './constants';
 
 function getMonthlyInterestRate(apr: number): number {
   return apr / 100 / 12;
@@ -40,6 +41,22 @@ function sortByCustom(debts: Debt[], customOrder: string[]): Debt[] {
   return ordered;
 }
 
+/**
+ * Calculate the complete payoff schedule for a debt payoff plan.
+ * Uses the avalanche method (highest interest first), snowball method (smallest balance first),
+ * or a custom order specified by the user.
+ *
+ * Algorithm:
+ * 1. Sort debts by chosen method (avalanche, snowball, or custom order)
+ * 2. For each month:
+ *    - Accrue interest on all remaining balances
+ *    - Pay minimum on each debt
+ *    - Apply extra payment to priority debt (first in sorted order)
+ * 3. Continue until all debts are paid or MAX_PAYOFF_MONTHS reached (prevents infinite loops)
+ *
+ * @param plan - The payoff plan configuration (method, monthly payment, debts, custom order)
+ * @returns Complete payoff schedule with month-by-month breakdown, total months, total interest, and total payments
+ */
 export function calculatePayoffSchedule(plan: PayoffPlan): PayoffSchedule {
   const { method, monthlyPayment, debts, customOrder } = plan;
 
@@ -128,7 +145,7 @@ export function calculatePayoffSchedule(plan: PayoffPlan): PayoffSchedule {
     }
 
     steps.push(monthlySteps);
-    if (month >= 600) break;
+    if (month >= MAX_PAYOFF_MONTHS) break;
   }
 
   return {

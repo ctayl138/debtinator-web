@@ -57,6 +57,24 @@ describe('useDebtStore', () => {
     expect(debts[0].type).toBe('other');
   });
 
+  it('addDebt includes tag when provided', () => {
+    const { result } = renderHook(() => useDebtActions());
+    act(() => {
+      result.current.addDebt(sampleDebtData({ tag: 'High Priority' }));
+    });
+    const debts = useDebtStore.getState().debts;
+    expect(debts[0].tag).toBe('High Priority');
+  });
+
+  it('addDebt includes dueDay when provided', () => {
+    const { result } = renderHook(() => useDebtActions());
+    act(() => {
+      result.current.addDebt(sampleDebtData({ dueDay: 15 }));
+    });
+    const debts = useDebtStore.getState().debts;
+    expect(debts[0].dueDay).toBe(15);
+  });
+
   it('updateDebt updates existing debt by id', () => {
     const { result } = renderHook(() => useDebtActions());
     act(() => {
@@ -126,6 +144,30 @@ describe('useDebtStore', () => {
     const { result: debtsResult } = renderHook(() => useDebts());
     expect(debtsResult.current).toHaveLength(1);
     expect(debtsResult.current[0].name).toBe('Test Debt');
+  });
+
+  it('updateDebt updates tag when provided', () => {
+    const { result } = renderHook(() => useDebtActions());
+    act(() => {
+      result.current.addDebt(sampleDebtData({ name: 'Card' }));
+    });
+    const id = useDebtStore.getState().debts[0].id;
+    act(() => {
+      result.current.updateDebt(id, sampleDebtData({ name: 'Card', tag: 'Updated Tag' }));
+    });
+    expect(useDebtStore.getState().debts[0].tag).toBe('Updated Tag');
+  });
+
+  it('updateDebt updates dueDay when provided', () => {
+    const { result } = renderHook(() => useDebtActions());
+    act(() => {
+      result.current.addDebt(sampleDebtData({ name: 'Card', dueDay: 1 }));
+    });
+    const id = useDebtStore.getState().debts[0].id;
+    act(() => {
+      result.current.updateDebt(id, sampleDebtData({ name: 'Card', dueDay: 20 }));
+    });
+    expect(useDebtStore.getState().debts[0].dueDay).toBe(20);
   });
 
   it('updateDebt preserves type when not provided in update data', () => {
@@ -292,6 +334,57 @@ describe('migrateDebts', () => {
     const withArray = [[1, 2, 3]]; // array is not a plain object
     const result = migrateDebts(withArray);
     expect(result).toEqual([]);
+  });
+
+  it('preserves and trims tag when present', () => {
+    const legacy = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, tag: '  My Tag  ' },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result[0].tag).toBe('My Tag');
+  });
+
+  it('omits tag when empty or whitespace', () => {
+    const legacy = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, tag: '' },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result[0].tag).toBeUndefined();
+  });
+
+  it('preserves dueDay when in 1-31', () => {
+    const legacy = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, dueDay: 15 },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result[0].dueDay).toBe(15);
+  });
+
+  it('floors dueDay to integer', () => {
+    const legacy = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, dueDay: 15.7 },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result[0].dueDay).toBe(15);
+  });
+
+  it('omits dueDay when out of range (0 or 32)', () => {
+    const legacy0 = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, dueDay: 0 },
+    ];
+    expect(migrateDebts(legacy0)[0].dueDay).toBeUndefined();
+    const legacy32 = [
+      { id: '2', name: 'Y', balance: 0, interestRate: 0, minimumPayment: 0, dueDay: 32 },
+    ];
+    expect(migrateDebts(legacy32)[0].dueDay).toBeUndefined();
+  });
+
+  it('omits dueDay when not a number', () => {
+    const legacy = [
+      { id: '1', name: 'X', balance: 0, interestRate: 0, minimumPayment: 0, dueDay: '15' as unknown as number },
+    ];
+    const result = migrateDebts(legacy);
+    expect(result[0].dueDay).toBeUndefined();
   });
 });
 

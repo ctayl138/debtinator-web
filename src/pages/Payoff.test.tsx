@@ -7,8 +7,12 @@ import type { Debt } from '@/types';
 let mockDebts: Debt[] = [];
 let mockMethod: 'snowball' | 'avalanche' | 'custom' = 'snowball';
 let mockMonthlyPayment = '';
+let mockCustomOrder: string[] = [];
+let mockStartDate = '';
 const mockSetMethod = jest.fn();
 const mockSetMonthlyPayment = jest.fn();
+const mockSetCustomOrder = jest.fn();
+const mockSetStartDate = jest.fn();
 let mockMonthlyIncome = 0;
 
 jest.mock('@/store/useDebtStore', () => ({
@@ -19,8 +23,12 @@ jest.mock('@/store/usePayoffFormStore', () => ({
   usePayoffFormStore: () => ({
     method: mockMethod,
     monthlyPayment: mockMonthlyPayment,
+    customOrder: mockCustomOrder,
+    startDate: mockStartDate,
     setMethod: mockSetMethod,
     setMonthlyPayment: mockSetMonthlyPayment,
+    setCustomOrder: mockSetCustomOrder,
+    setStartDate: mockSetStartDate,
   }),
 }));
 
@@ -44,6 +52,8 @@ describe('Payoff', () => {
     mockDebts = [];
     mockMethod = 'snowball';
     mockMonthlyPayment = '';
+    mockCustomOrder = [];
+    mockStartDate = '';
     mockMonthlyIncome = 0;
     jest.clearAllMocks();
   });
@@ -51,7 +61,7 @@ describe('Payoff', () => {
   it('renders empty state when no debts', () => {
     renderWithProviders(<Payoff />);
     expect(screen.getByTestId('payoff-empty')).toBeInTheDocument();
-    expect(screen.getByText('No Debts to Plan')).toBeInTheDocument();
+    expect(screen.getByText('No debts yet')).toBeInTheDocument();
   });
 
   it('renders method and monthly payment sections when debts exist', () => {
@@ -75,7 +85,7 @@ describe('Payoff', () => {
     cleanup();
     mockMethod = 'custom';
     renderWithProviders(<Payoff />);
-    expect(screen.getByText(/Choose your own payoff order/)).toBeInTheDocument();
+    expect(screen.getByText(/Drag or use arrows to set the order/)).toBeInTheDocument();
   });
 
   it('calls setMonthlyPayment when input changes', () => {
@@ -107,6 +117,26 @@ describe('Payoff', () => {
     expect(screen.getByText('Your payment:')).toBeInTheDocument();
   });
 
+  it('calls setStartDate when first payment date is changed', () => {
+    mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' }];
+    renderWithProviders(<Payoff />);
+    fireEvent.change(screen.getByTestId('start-date-input'), { target: { value: '2027-06-15' } });
+    expect(mockSetStartDate).toHaveBeenCalledWith('2027-06-15');
+  });
+
+  it('moves custom order up when move up is clicked', () => {
+    mockDebts = [
+      { id: '1', name: 'First', type: 'credit_card', balance: 500, interestRate: 10, minimumPayment: 25, createdAt: '' },
+      { id: '2', name: 'Second', type: 'credit_card', balance: 300, interestRate: 15, minimumPayment: 20, createdAt: '' },
+    ];
+    mockMethod = 'custom';
+    mockCustomOrder = ['1', '2'];
+    renderWithProviders(<Payoff />);
+    const moveUpButtons = screen.getAllByLabelText(/Move .* up/);
+    fireEvent.click(moveUpButtons[1]);
+    expect(mockSetCustomOrder).toHaveBeenCalled();
+  });
+
   it('shows payoff summary when schedule exists', () => {
     mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' }];
     mockMonthlyPayment = '100';
@@ -121,5 +151,24 @@ describe('Payoff', () => {
     mockMonthlyPayment = '10';
     renderWithProviders(<Payoff />);
     expect(screen.queryByText('Payoff Summary')).not.toBeInTheDocument();
+  });
+
+  it('shows custom order list with up/down buttons when method is custom', () => {
+    mockDebts = [
+      { id: '1', name: 'Card A', type: 'credit_card', balance: 500, interestRate: 15, minimumPayment: 25, createdAt: '' },
+      { id: '2', name: 'Card B', type: 'credit_card', balance: 1000, interestRate: 18, minimumPayment: 40, createdAt: '' },
+    ];
+    mockMethod = 'custom';
+    mockCustomOrder = ['1', '2'];
+    renderWithProviders(<Payoff />);
+    expect(screen.getByTestId('custom-order-list')).toBeInTheDocument();
+    expect(screen.getByText('1. Card A')).toBeInTheDocument();
+    expect(screen.getByText('2. Card B')).toBeInTheDocument();
+    const upButtons = screen.getAllByLabelText(/Move .* up/);
+    const downButtons = screen.getAllByLabelText(/Move .* down/);
+    expect(upButtons).toHaveLength(2);
+    expect(downButtons).toHaveLength(2);
+    fireEvent.click(downButtons[0]);
+    expect(mockSetCustomOrder).toHaveBeenCalledWith(['2', '1']);
   });
 });

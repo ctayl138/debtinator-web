@@ -20,4 +20,10 @@ describe('theme/muiTheme', () => {
     const buttonOverride = theme.components?.MuiButton?.styleOverrides?.root;
     expect(buttonOverride).toEqual({ textTransform: 'none' });
   });
+
+  it('applies MuiDialog paper overrides', () => {
+    const theme = getAppTheme('light');
+    const dialogPaperOverride = theme.components?.MuiDialog?.styleOverrides?.paper;
+    expect(dialogPaperOverride).toEqual({ maxWidth: 'sm', width: '100%' });
+  });
 });
