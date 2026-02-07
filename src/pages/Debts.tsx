@@ -190,7 +190,7 @@ export default function Debts() {
       <List>
         {sections.map(({ type, title, data }) => (
           <Box key={type} component="div">
-            <ListSubheader component="div" sx={{ bgcolor: 'background.paper' }}>
+            <ListSubheader component="div" sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
               {title} — {data.length} {data.length === 1 ? 'debt' : 'debts'}
             </ListSubheader>
             {data.map((item) => (

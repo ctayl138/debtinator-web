@@ -14,6 +14,12 @@ export const Z_INDEX_FAB = 1100;
 /** Z-index for bottom navigation (above content, below FAB and modals) */
 export const Z_INDEX_BOTTOM_NAV = 1050;
 
+/** Drawer width for both mobile and desktop */
+export const DRAWER_WIDTH = 260;
+
+/** AppBar height for desktop drawer positioning */
+export const APPBAR_HEIGHT = 64;
+
 /** Debt type display labels */
 export const DEBT_TYPE_LABELS: Record<string, string> = {
   credit_card: 'Credit Card',

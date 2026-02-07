@@ -87,10 +87,6 @@ test.describe('Payoff - Navigation Icons', () => {
     await payoffPage.setMonthlyPayment('100');
   });
 
-  test('shows menu button in header', async ({ payoffPage }) => {
-    await payoffPage.assertMenuButtonVisible();
-  });
-
   test('shows chart icon when payoff plan is configured', async ({ payoffPage }) => {
     await payoffPage.assertChartsButtonVisible();
   });

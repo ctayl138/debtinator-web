@@ -5,14 +5,12 @@ export class PayoffPage extends BasePage {
   readonly emptyState: Locator;
   readonly methodCard: Locator;
   readonly monthlyPaymentInput: Locator;
-  readonly menuButton: Locator;
 
   constructor(page: Parameters<typeof BasePage>[0]) {
     super(page);
     this.emptyState = this.getByTestId('payoff-empty');
     this.methodCard = this.getByTestId('payoff-method-card');
     this.monthlyPaymentInput = this.getByTestId('monthly-payment-input');
-    this.menuButton = this.getByLabel(/open menu/i).first();
   }
 
   async goto(): Promise<void> {
@@ -44,8 +42,7 @@ export class PayoffPage extends BasePage {
   }
 
   async openSettings(): Promise<void> {
-    await this.menuButton.click();
-    await this.page.getByRole('link', { name: 'Settings' }).click();
+    await this.navigateViaMenu('Settings');
   }
 
   /** Navigate to Charts (link on Payoff page when plan is valid, or via URL). */
@@ -95,10 +92,6 @@ export class PayoffPage extends BasePage {
     await expect(this.getByText(/total interest:/i)).toBeVisible();
   }
 
-  async assertMenuButtonVisible(): Promise<void> {
-    await expect(this.menuButton).toBeVisible({ timeout: 5000 });
-  }
-
   async assertChartsButtonVisible(): Promise<void> {
     await expect(this.page.getByRole('link', { name: 'Charts' }).first()).toBeVisible({
       timeout: 5000,
@@ -113,12 +106,6 @@ export class PayoffPage extends BasePage {
 
   async assertMonthlyPaymentValue(value: string): Promise<void> {
     await expect(this.monthlyPaymentInput).toHaveValue(value);
-  }
-
-  /** Open menu and click Features Guide link. */
-  async openHelp(): Promise<void> {
-    await this.menuButton.click();
-    await this.page.getByRole('link', { name: 'Features Guide' }).click();
   }
 
   async assertIncomeInsightsVisible(): Promise<void> {

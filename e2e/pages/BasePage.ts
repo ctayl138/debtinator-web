@@ -55,4 +55,31 @@ export abstract class BasePage {
   async reload(): Promise<void> {
     await this.page.reload();
   }
+
+  /**
+   * Returns true if the viewport is mobile (<900px), false if desktop (≥900px).
+   */
+  async isMobileViewport(): Promise<boolean> {
+    const width = this.page.viewportSize()?.width ?? 0;
+    return width < 900;
+  }
+
+  /**
+   * Open menu and navigate to a link (sidebar for desktop, hamburger drawer for mobile).
+   * Works on both mobile and desktop viewports.
+   */
+  async navigateViaMenu(linkName: string | RegExp): Promise<void> {
+    const isMobile = await this.isMobileViewport();
+
+    if (isMobile) {
+      // Mobile: open hamburger menu first
+      await this.page.getByLabel(/open menu/i).first().click();
+    }
+
+    // Click the link (visible in sidebar on desktop or drawer on mobile)
+    // Use .first() to get the nav link, not other elements with the same text
+    const link = this.page.getByRole('link', { name: linkName }).first();
+    await expect(link).toBeVisible({ timeout: 5000 });
+    await link.click();
+  }
 }

@@ -97,15 +97,16 @@ export class SettingsPage extends BasePage {
     const link = this.getByTestId('help-documentation-link');
     await link.waitFor({ state: 'visible', timeout: 5000 });
     // SPA navigation: use normal click so React Router Link fires; then poll for URL (no full page load)
-    await link.click({ noWaitAfter: true });
-    await expect(this.page).toHaveURL(/\/documentation/, { timeout: 10000 });
+    await link.click();
+    // Wait for navigation to complete
+    await this.page.waitForURL(/\/documentation/, { timeout: 10000 });
   }
 
   async assertHelpSectionVisible(): Promise<void> {
     await this.waitForDrawerClosed();
     await this.page.getByRole('button', { name: /^help$/i }).first().click({ force: true });
     await expect(
-      this.page.getByRole('link', { name: 'Features Guide' })
+      this.getByTestId('help-documentation-link')
     ).toBeVisible({ timeout: 3000 });
   }
 }
