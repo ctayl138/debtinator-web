@@ -122,6 +122,12 @@ test.describe('Navigation', () => {
 
   test('can collapse and expand desktop sidebar', async ({ page, debtsPage }) => {
     // Desktop only - sidebar toggle appears on larger viewports
+    // Skip on mobile viewports
+    const width = page.viewportSize()?.width ?? 0;
+    if (width < 900) {
+      test.skip();
+    }
+
     await debtsPage.goto();
 
     // Sidebar should be visible initially
@@ -148,6 +154,13 @@ test.describe('Navigation', () => {
     debtsPage,
     payoffPage,
   }) => {
+    // Desktop only - sidebar toggle appears on larger viewports
+    // Skip on mobile viewports
+    const width = page.viewportSize()?.width ?? 0;
+    if (width < 900) {
+      test.skip();
+    }
+
     await debtsPage.goto();
 
     // Collapse the sidebar
