@@ -8,23 +8,23 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useDebts } from '@/store/useDebtStore';
 import { usePayoffFormStore } from '@/store/usePayoffFormStore';
+import { useLocale } from '@/hooks/useLocale';
 import type { PayoffPlan, PayoffSchedule } from '@/types';
 import { calculatePayoffSchedule } from '@/utils/payoffCalculations';
+import { formatCurrency } from '@/utils/formatters';
 
 const INITIAL_MONTHS = 12;
 const LOAD_MORE = 12;
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
 /** monthIndex is 1-based (month 1 = first payment). baseDate YYYY-MM-DD or empty for current month. */
-function getMonthYear(monthIndex: number, baseDate?: string): string {
+function getMonthYear(monthIndex: number, baseDate?: string, locale: string = 'en-US'): string {
   const d = baseDate ? new Date(baseDate + 'T12:00:00') : new Date();
   if (!baseDate) d.setMonth(d.getMonth() + monthIndex);
   else d.setMonth(d.getMonth() + monthIndex - 1);
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 }
 
 export function getNextVisibleMonths(
@@ -36,6 +36,8 @@ export function getNextVisibleMonths(
 }
 
 export default function PayoffTimeline() {
+  const { t } = useTranslation('timeline');
+  const locale = useLocale();
   const debts = useDebts();
   const { method, monthlyPayment, customOrder, startDate } = usePayoffFormStore();
   const [visibleMonths, setVisibleMonths] = useState(INITIAL_MONTHS);
@@ -80,7 +82,7 @@ export default function PayoffTimeline() {
     return (
       <Box py={4} textAlign="center" data-testid="timeline-empty">
         <Typography color="text.secondary">
-          Add debts on the Debts tab, then set a monthly payment on the Payoff tab to see your timeline here.
+          {t('emptyNoDebts')}
         </Typography>
       </Box>
     );
@@ -90,7 +92,7 @@ export default function PayoffTimeline() {
     return (
       <Box py={4} textAlign="center" data-testid="timeline-no-plan">
         <Typography color="text.secondary">
-          Enter a monthly payment (at least the total of your minimums) on the Payoff tab to see your month-by-month schedule.
+          {t('emptyNoPlan')}
         </Typography>
       </Box>
     );
@@ -101,10 +103,10 @@ export default function PayoffTimeline() {
       <Card>
         <CardContent>
           <Typography variant="subtitle1" gutterBottom>
-            Payoff Timeline — {schedule.totalMonths} months total
+            {t('title', { months: schedule.totalMonths })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Total interest: {formatCurrency(schedule.totalInterest)}
+            {t('totalInterest', { amount: formatCurrency(schedule.totalInterest, locale) })}
           </Typography>
         </CardContent>
       </Card>
@@ -112,24 +114,24 @@ export default function PayoffTimeline() {
       <List>
         {displayedMonths.map((monthSteps, idx) => {
           const month = idx + 1;
-          const monthLabel = getMonthYear(month, startDate || undefined);
+          const monthLabel = getMonthYear(month, startDate || undefined, locale);
           const totalPaid = monthSteps.reduce((sum, s) => sum + s.payment, 0);
           const totalInterest = monthSteps.reduce((sum, s) => sum + s.interestPaid, 0);
           return (
             <Card key={month} variant="outlined" sx={{ mb: 2 }}>
               <CardContent>
                 <Typography variant="subtitle2" color="primary" gutterBottom>
-                  Month {month} — {monthLabel}
+                  {t('monthLabel', { number: month, date: monthLabel })}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Total paid: {formatCurrency(totalPaid)} (interest: {formatCurrency(totalInterest)})
+                  {t('totalPaid', { amount: formatCurrency(totalPaid, locale), interest: formatCurrency(totalInterest, locale) })}
                 </Typography>
                 <List dense disablePadding>
                   {monthSteps.map((step) => (
                     <ListItem key={step.debtId} disablePadding sx={{ py: 0.25 }}>
                       <ListItemText
                         primary={step.debtName}
-                        secondary={`${formatCurrency(step.payment)} → ${formatCurrency(step.remainingBalance)} left`}
+                        secondary={t('paymentRemaining', { payment: formatCurrency(step.payment, locale), remaining: formatCurrency(step.remainingBalance, locale) })}
                         primaryTypographyProps={{ variant: 'body2' }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />
@@ -150,14 +152,14 @@ export default function PayoffTimeline() {
             onClick={handleLoadMore}
             sx={{ cursor: 'pointer' }}
           >
-            Load more months
+            {t('loadMore')}
           </Typography>
         </Box>
       )}
 
       {!hasMore && schedule.steps.length > 0 && (
         <Box textAlign="center" py={2}>
-          <Typography color="text.secondary">You&apos;re debt-free in {schedule.totalMonths} months!</Typography>
+          <Typography color="text.secondary">{t('debtFree', { months: schedule.totalMonths })}</Typography>
         </Box>
       )}
     </Box>

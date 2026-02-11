@@ -4,9 +4,9 @@ import {
   Typography,
   Card,
   CardContent,
+  Divider,
   Fab,
   List,
-  ListSubheader,
   ListItemButton,
   ListItemText,
   Dialog,
@@ -17,17 +17,22 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useTranslation } from 'react-i18next';
 import { useDebts, useDebtActions } from '@/store/useDebtStore';
 import DebtForm from '@/components/DebtForm';
 import ImportDialog from '@/components/ImportDialog';
 import { useImportDialog } from '@/hooks/useImportDialog';
+import { useLocale } from '@/hooks/useLocale';
 import type { Debt, DebtType } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
-import { DEBT_TYPE_LABELS, Z_INDEX_FAB } from '@/utils/constants';
+import { Z_INDEX_FAB } from '@/utils/constants';
 
 const DEBT_TYPE_ORDER: DebtType[] = ['credit_card', 'personal_loan', 'other'];
 
 export default function Debts() {
+  const { t } = useTranslation('debts');
+  const { t: tc } = useTranslation('common');
+  const locale = useLocale();
   const debts = useDebts();
   const { addDebt, updateDebt, deleteDebt } = useDebtActions();
   const [showForm, setShowForm] = useState(false);
@@ -47,6 +52,12 @@ export default function Debts() {
     closeImport,
   } = useImportDialog();
 
+  const DEBT_TYPE_LABEL_MAP: Record<string, string> = useMemo(() => ({
+    credit_card: tc('debtTypeCredit'),
+    personal_loan: tc('debtTypePersonal'),
+    other: tc('debtTypeOther'),
+  }), [tc]);
+
   const summary = useMemo(() => {
     const totalBalance = debts.reduce((sum, d) => sum + d.balance, 0);
     const totalMinimumPayments = debts.reduce((sum, d) => sum + d.minimumPayment, 0);
@@ -65,10 +76,10 @@ export default function Debts() {
   const sections = useMemo(() => {
     return DEBT_TYPE_ORDER.map((type) => ({
       type,
-      title: DEBT_TYPE_LABELS[type],
+      title: DEBT_TYPE_LABEL_MAP[type] ?? type,
       data: debts.filter((d) => (d.type || 'other') === type),
     })).filter((s) => s.data.length > 0);
-  }, [debts]);
+  }, [debts, DEBT_TYPE_LABEL_MAP]);
 
   const handleFormSubmit = (debtData: Omit<Debt, 'id' | 'createdAt'>) => {
     if (editingDebt) {
@@ -129,15 +140,15 @@ export default function Debts() {
         gap={2}
         data-testid="debts-empty"
       >
-        <Typography variant="h6">No debts yet</Typography>
+        <Typography variant="h6">{tc('noDebtsYet')}</Typography>
         <Typography color="text.secondary" textAlign="center">
-          Add your first debt with the + button, or import from a CSV to get started.
+          {t('emptyStateMessage')}
         </Typography>
         <Box display="flex" gap={1} flexWrap="wrap" justifyContent="center">
           <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={openImport} data-testid="import-debts-btn">
-            Import from CSV
+            {t('importFromCsv')}
           </Button>
-          <Fab color="primary" onClick={() => setShowForm(true)} aria-label="Add debt" data-testid="add-debt-fab">
+          <Fab color="primary" onClick={() => setShowForm(true)} aria-label={tc('addDebt')} data-testid="add-debt-fab">
             <AddIcon />
           </Fab>
         </Box>
@@ -164,12 +175,12 @@ export default function Debts() {
             <Box display="flex" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
               <Box>
                 <Typography color="text.secondary" variant="subtitle1">
-                  Total Debt
+                  {t('totalDebt')}
                 </Typography>
-                <Typography variant="h5">{formatCurrency(summary.totalBalance)}</Typography>
+                <Typography variant="h5">{formatCurrency(summary.totalBalance, locale)}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {summary.count} {summary.count === 1 ? 'debt' : 'debts'} · Min payment:{' '}
-                  {formatCurrency(summary.totalMinimumPayments)} · Avg APR:{' '}
+                  {t('summaryCount', { count: summary.count })} · {t('minPayment')}{' '}
+                  {formatCurrency(summary.totalMinimumPayments, locale)} · {t('avgApr')}{' '}
                   {summary.weightedInterestRate.toFixed(2)}%
                 </Typography>
               </Box>
@@ -180,7 +191,7 @@ export default function Debts() {
                 onClick={openImport}
                 data-testid="import-debts-btn"
               >
-                Import
+                {tc('import')}
               </Button>
             </Box>
           </CardContent>
@@ -190,47 +201,47 @@ export default function Debts() {
       <List>
         {sections.map(({ type, title, data }) => (
           <Box key={type} component="div">
-            <ListSubheader component="div" sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
-              {title} — {data.length} {data.length === 1 ? 'debt' : 'debts'}
-            </ListSubheader>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ px: 2, pt: 2, pb: 0.5 }}>
+              {t('sectionHeader', { type: title, count: data.length })}
+            </Typography>
+            <Divider sx={{ mx: 2 }} />
             {data.map((item) => (
-              <Card key={item.id} variant="outlined" sx={{ mb: 1 }}>
-                <ListItemButton
-                  onClick={() => {
-                    setEditingDebt(item);
-                    setShowForm(true);
-                  }}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setDeletingDebt(item);
-                  }}
-                >
-                  <ListItemText
-                    primary={
-                      <>
-                        {item.name}
-                        {item.tag && (
-                          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                            · {item.tag}
-                          </Typography>
-                        )}
-                      </>
-                    }
-                    secondary={
-                      <>
-                        {formatCurrency(item.balance)} · {item.interestRate.toFixed(2)}% APR · Min{' '}
-                        {formatCurrency(item.minimumPayment)}
-                        {item.dueDay != null && (
-                          <Typography component="span" variant="caption" color="text.secondary" display="block">
-                            Due day: {item.dueDay}
-                          </Typography>
-                        )}
-                      </>
-                    }
-                    primaryTypographyProps={{ fontWeight: 600 }}
-                  />
-                </ListItemButton>
-              </Card>
+              <ListItemButton
+                key={item.id}
+                onClick={() => {
+                  setEditingDebt(item);
+                  setShowForm(true);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setDeletingDebt(item);
+                }}
+              >
+                <ListItemText
+                  primary={
+                    <>
+                      {item.name}
+                      {item.tag && (
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                          · {item.tag}
+                        </Typography>
+                      )}
+                    </>
+                  }
+                  secondary={
+                    <>
+                      {formatCurrency(item.balance, locale)} · {item.interestRate.toFixed(2)}% APR · Min{' '}
+                      {formatCurrency(item.minimumPayment, locale)}
+                      {item.dueDay != null && (
+                        <Typography component="span" variant="caption" color="text.secondary" display="block">
+                          {t('dueDay', { day: item.dueDay })}
+                        </Typography>
+                      )}
+                    </>
+                  }
+                  primaryTypographyProps={{ fontWeight: 600 }}
+                />
+              </ListItemButton>
             ))}
           </Box>
         ))}
@@ -243,7 +254,7 @@ export default function Debts() {
           setEditingDebt(undefined);
           setShowForm(true);
         }}
-        aria-label="Add debt"
+        aria-label={tc('addDebt')}
         data-testid="add-debt-fab"
       >
         <AddIcon />
@@ -282,16 +293,16 @@ export default function Debts() {
       />
 
       <Dialog open={!!deletingDebt} onClose={() => setDeletingDebt(undefined)} data-testid="delete-debt-dialog">
-        <DialogTitle>Delete Debt</DialogTitle>
+        <DialogTitle>{t('deleteDebtTitle')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete &quot;{deletingDebt?.name}&quot;? This action cannot be undone.
+            {t('deleteDebtConfirm', { name: deletingDebt?.name })}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeletingDebt(undefined)}>Cancel</Button>
+          <Button onClick={() => setDeletingDebt(undefined)}>{tc('cancel')}</Button>
           <Button onClick={confirmDelete} color="error">
-            Delete
+            {tc('delete')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -16,15 +16,23 @@ jest.mock('@/store/useThemeStore', () => ({
 
 let mockMonthlyIncome = 0;
 const mockSetMonthlyIncome = jest.fn();
-jest.mock('@/store/useIncomeStore', () => ({
-  useIncomeStore: Object.assign(
-    (selector: (s: { monthlyIncome: number; setMonthlyIncome: jest.Mock }) => unknown) =>
-      selector({ monthlyIncome: mockMonthlyIncome, setMonthlyIncome: mockSetMonthlyIncome }),
-    {
-      getState: () => ({ monthlyIncome: mockMonthlyIncome, setMonthlyIncome: mockSetMonthlyIncome }),
-    }
-  ),
-}));
+jest.mock('@/store/useIncomeStore', () => {
+  const actual = jest.requireActual<typeof import('@/store/useIncomeStore')>('@/store/useIncomeStore');
+  const getMockState = () => ({
+    incomes: mockMonthlyIncome > 0 ? [{ id: '1', name: 'Test', type: 'other' as const, amount: mockMonthlyIncome, createdAt: '' }] : [],
+    addIncome: jest.fn(),
+    updateIncome: jest.fn(),
+    deleteIncome: jest.fn(),
+    setMonthlyIncome: mockSetMonthlyIncome,
+  });
+  return {
+    ...actual,
+    useIncomeStore: Object.assign(
+      (selector: (s: unknown) => unknown) => selector(getMockState()),
+      { getState: getMockState }
+    ),
+  };
+});
 
 let mockDebts: { id: string; name: string; type: string; balance: number; interestRate: number; minimumPayment: number; createdAt: string }[] = [];
 const mockSetState = jest.fn();
@@ -35,6 +43,18 @@ jest.mock('@/store/useDebtStore', () => ({
     setState: mockSetState,
   },
   migrateDebts: (debts: unknown[]) => debts,
+}));
+
+let mockLanguage = 'en';
+const mockSetLanguage = jest.fn();
+jest.mock('@/store/useLanguageStore', () => ({
+  useLanguageStore: Object.assign(
+    (selector: (s: { language: string; setLanguage: jest.Mock }) => unknown) =>
+      selector({ language: mockLanguage, setLanguage: mockSetLanguage }),
+    {
+      getState: () => ({ language: mockLanguage, setLanguage: mockSetLanguage }),
+    }
+  ),
 }));
 
 let mockMonthlyPayment = '200';
@@ -81,6 +101,7 @@ describe('Settings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMode = 'light';
+    mockLanguage = 'en';
     mockMonthlyIncome = 0;
     mockDebts = [];
     mockMonthlyPayment = '200';
@@ -112,39 +133,6 @@ describe('Settings', () => {
     fireEvent.click(screen.getByRole('button', { name: /help/i }));
     expect(screen.getByText('Features Guide')).toBeInTheDocument();
     expect(screen.getByTestId('help-documentation-link')).toBeInTheDocument();
-  });
-
-  it('renders income input when Income is expanded', () => {
-    renderWithProviders(<Settings />);
-    fireEvent.click(screen.getByRole('button', { name: /income/i }));
-    expect(screen.getByTestId('income-input')).toBeInTheDocument();
-  });
-
-  it('calls setMonthlyIncome on blur with valid value', () => {
-    renderWithProviders(<Settings />);
-    fireEvent.click(screen.getByRole('button', { name: /income/i }));
-    const input = screen.getByTestId('income-input') as HTMLInputElement;
-    fireEvent.change(input, { target: { value: '5000' } });
-    fireEvent.blur(input);
-    expect(mockSetMonthlyIncome).toHaveBeenCalledWith(5000);
-  });
-
-  it('clears income input when value is invalid', () => {
-    renderWithProviders(<Settings />);
-    fireEvent.click(screen.getByRole('button', { name: /income/i }));
-    const input = screen.getByTestId('income-input') as HTMLInputElement;
-    fireEvent.change(input, { target: { value: 'abc' } });
-    fireEvent.blur(input);
-    expect(mockSetMonthlyIncome).toHaveBeenCalledWith(0);
-    expect(input.value).toBe('');
-  });
-
-  it('syncs income input from store when monthlyIncome > 0', () => {
-    mockMonthlyIncome = 5000;
-    renderWithProviders(<Settings />);
-    fireEvent.click(screen.getByRole('button', { name: /income/i }));
-    const input = screen.getByTestId('income-input') as HTMLInputElement;
-    expect(input.value).toBe('5000');
   });
 
   it('shows export button when Export Data is expanded', () => {
@@ -279,6 +267,26 @@ describe('Settings', () => {
     fireEvent.click(restoreBtn);
     expect(clickSpy).toHaveBeenCalled();
     clickSpy.mockRestore();
+  });
+
+  it('restores language from backup file', async () => {
+    const backup = JSON.stringify({
+      debts: [],
+      monthlyIncome: 0,
+      theme: 'light',
+      language: 'es',
+      payoffForm: { method: 'snowball', monthlyPayment: '200', customOrder: [], startDate: '' },
+    });
+    const file = new File([backup], 'backup.json', { type: 'application/json' });
+    file.text = () => Promise.resolve(backup);
+    renderWithProviders(<Settings />);
+    fireEvent.click(screen.getByRole('button', { name: /backup\s*[&]\s*restore/i }));
+    const restoreInput = screen.getByTestId('restore-file-input');
+    fireEvent.change(restoreInput, { target: { files: [file] } });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    expect(mockSetLanguage).toHaveBeenCalledWith('es');
   });
 
   it('triggers download when backup button is clicked', () => {

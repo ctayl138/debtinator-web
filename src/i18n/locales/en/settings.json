@@ -1,0 +1,22 @@
+{
+  "appearance": "Appearance",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System (match device)",
+  "language": "Language",
+  "languageEnglish": "English",
+  "languageSpanish": "Español",
+  "income": "Income",
+  "monthlyIncomeLabel": "Monthly Income (optional)",
+  "exportData": "Export Data",
+  "exportDescription": "Download your debt data as Excel for counseling or analysis. Data stays on your device.",
+  "exportExcel": "Export to Excel",
+  "exportPdf": "Export to PDF",
+  "backupRestore": "Backup & Restore",
+  "backupDescription": "Download a JSON backup of all your data, or restore from a previous backup. Data stays on your device.",
+  "downloadBackup": "Download backup",
+  "restoreFromFile": "Restore from file",
+  "invalidBackupFile": "Invalid backup file",
+  "help": "Help",
+  "featuresGuide": "Features Guide"
+}

@@ -1,0 +1,9 @@
+{
+  "principalVsInterest": "Capital vs Interés",
+  "balanceOverTime": "Saldo a lo Largo del Tiempo",
+  "freedUpOverTime": "Ingreso Liberado",
+  "principal": "Capital",
+  "interest": "Interés",
+  "emptyNoDebts": "Agrega deudas en la pestaña Deudas, luego crea un plan de pago para ver gráficos de capital vs interés y saldo a lo largo del tiempo aquí.",
+  "emptyNoPlan": "Ingresa un pago mensual de al menos {{amount}} en la pestaña Pago para ver tus gráficos."
+}

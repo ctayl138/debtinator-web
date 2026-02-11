@@ -7,6 +7,8 @@ import {
   Toolbar,
   IconButton,
   Typography,
+  Menu,
+  MenuItem,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -15,54 +17,42 @@ import ListIcon from '@mui/icons-material/List';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LanguageIcon from '@mui/icons-material/Language';
 import { useState, useEffect } from 'react';
+import { useLanguageStore } from '@/store/useLanguageStore';
 import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Dialog, DialogTitle, DialogContent } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { Link as RouterLink } from 'react-router-dom';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
-const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
-
-const getSidebarCollapsed = (): boolean => {
-  try {
-    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-    return stored === 'true';
-  } catch {
-    return false;
-  }
-};
-
-const setSidebarCollapsed = (collapsed: boolean): void => {
-  try {
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
-  } catch {
-    // Ignore storage errors
-  }
-};
-
-const allNavItems = [
-  { path: '/', label: 'Debts', icon: <ListIcon /> },
-  { path: '/payoff', label: 'Payoff', icon: <TrendingUpIcon /> },
-  { path: '/charts', label: 'Charts', icon: <BarChartIcon /> },
-  { path: '/payoff-timeline', label: 'Timeline', icon: <CalendarMonthIcon /> },
-  { path: '/settings', label: 'Settings', icon: <SettingsIcon /> },
+const NAV_ICONS: { path: string; labelKey: string; icon: React.ReactNode }[] = [
+  { path: '/', labelKey: 'navDebts', icon: <ListIcon /> },
+  { path: '/payoff', labelKey: 'navPayoff', icon: <TrendingUpIcon /> },
+  { path: '/charts', labelKey: 'navCharts', icon: <BarChartIcon /> },
+  { path: '/payoff-timeline', labelKey: 'navTimeline', icon: <CalendarMonthIcon /> },
+  { path: '/income', labelKey: 'navIncome', icon: <AttachMoneyIcon /> },
+  { path: '/settings', labelKey: 'navSettings', icon: <SettingsIcon /> },
+  { path: '/documentation', labelKey: 'navDocs', icon: <DescriptionIcon /> },
 ];
 
-const SHORTCUTS = [
-  { key: '?', description: 'Show keyboard shortcuts' },
-  { key: 'N', description: 'Add new debt (on Debts page)' },
+const SHORTCUT_KEYS = [
+  { key: '?', descriptionKey: 'shortcutHelp' },
+  { key: 'N', descriptionKey: 'shortcutNewDebt' },
 ];
 
 export default function Layout() {
+  const { t } = useTranslation('common');
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => getSidebarCollapsed());
+  const [languageAnchor, setLanguageAnchor] = useState<null | HTMLElement>(null);
   const theme = useTheme();
+  const language = useLanguageStore((s) => s.language);
+  const setLanguage = useLanguageStore((s) => s.setLanguage);
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
   useEffect(() => {
@@ -86,24 +76,15 @@ export default function Layout() {
     }
   }, [isDesktop, drawerOpen]);
 
-  // Sync sidebar collapsed state to localStorage
-  useEffect(() => {
-    setSidebarCollapsed(sidebarCollapsed);
-  }, [sidebarCollapsed]);
+  const sidebarWidth = isDesktop ? DRAWER_WIDTH : 0;
 
-  const toggleSidebar = () => {
-    setSidebarCollapsedState(!sidebarCollapsed);
-  };
-
-  const sidebarWidth = isDesktop && !sidebarCollapsed ? DRAWER_WIDTH : 0;
-
-  const primaryNavItems = allNavItems.slice(0, 2); // Debts, Payoff
+  const primaryNavItems = NAV_ICONS.slice(0, 2); // Debts, Payoff
   const currentNav = primaryNavItems.find((item) => item.path === location.pathname)?.path ?? primaryNavItems[0].path;
 
   const drawerContent = (
     <Box sx={{ width: DRAWER_WIDTH }} role="presentation">
       <List>
-        {allNavItems.map((item) => (
+        {NAV_ICONS.map((item) => (
           <ListItemButton
             key={item.path}
             component={RouterLink}
@@ -112,7 +93,7 @@ export default function Layout() {
             selected={location.pathname === item.path}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemText primary={t(item.labelKey)} />
           </ListItemButton>
         ))}
       </List>
@@ -128,19 +109,76 @@ export default function Layout() {
               color="inherit"
               edge="start"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Open menu"
+              aria-label={t('openMenu')}
             >
               <MenuIcon />
             </IconButton>
           )}
-          <Typography variant="h6" component="span" sx={{ flexGrow: 1 }}>
-            Debtinator
-          </Typography>
+          <Box
+            component="span"
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                borderRadius: 1.5,
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                component="img"
+                src="/debtinator-logo.png"
+                alt=""
+                sx={{ height: 36, width: 'auto', display: 'block', verticalAlign: 'middle' }}
+              />
+            </Box>
+            <Typography variant="h6" component="span">
+              {t('appName')}
+            </Typography>
+          </Box>
+          <IconButton
+            color="inherit"
+            onClick={(e) => setLanguageAnchor(e.currentTarget)}
+            aria-label={t('language')}
+            data-testid="language-menu-button"
+          >
+            <LanguageIcon />
+          </IconButton>
+          <Menu
+            anchorEl={languageAnchor}
+            open={Boolean(languageAnchor)}
+            onClose={() => setLanguageAnchor(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem
+              onClick={() => { setLanguage('en'); setLanguageAnchor(null); }}
+              selected={language === 'en'}
+              data-testid="language-en-btn"
+            >
+              {t('languageEnglish')}
+            </MenuItem>
+            <MenuItem
+              onClick={() => { setLanguage('es'); setLanguageAnchor(null); }}
+              selected={language === 'es'}
+              data-testid="language-es-btn"
+            >
+              {t('languageSpanish')}
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
       <Box sx={{ display: 'flex', flex: 1, position: 'relative' }}>
-        {isDesktop && !sidebarCollapsed && (
+        {isDesktop && (
           <Box
             sx={{
               width: DRAWER_WIDTH,
@@ -159,32 +197,6 @@ export default function Layout() {
           >
             {drawerContent}
           </Box>
-        )}
-
-        {isDesktop && (
-          <IconButton
-            onClick={toggleSidebar}
-            sx={{
-              position: 'fixed',
-              left: sidebarCollapsed ? 8 : DRAWER_WIDTH - 48,
-              top: APPBAR_HEIGHT + 8,
-              zIndex: theme.zIndex.drawer + 1,
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                bgcolor: 'action.hover',
-              },
-              transition: theme.transitions.create(['left'], {
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-            }}
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            data-testid="sidebar-toggle"
-            size="small"
-          >
-            {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </IconButton>
         )}
 
         {!isDesktop && (
@@ -233,7 +245,7 @@ export default function Layout() {
               component={Link}
               to={item.path}
               value={item.path}
-              label={item.label}
+              label={t(item.labelKey)}
               icon={item.icon}
             />
           ))}
@@ -241,12 +253,12 @@ export default function Layout() {
       )}
 
       <Dialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} maxWidth="xs" fullWidth data-testid="shortcuts-dialog">
-        <DialogTitle>Keyboard shortcuts</DialogTitle>
+        <DialogTitle>{t('keyboardShortcuts')}</DialogTitle>
         <DialogContent>
           <List dense disablePadding>
-            {SHORTCUTS.map((s) => (
+            {SHORTCUT_KEYS.map((s) => (
               <ListItemButton key={s.key} disableRipple>
-                <ListItemText primary={s.description} secondary={<kbd style={{ fontFamily: 'inherit' }}>{s.key}</kbd>} />
+                <ListItemText primary={t(s.descriptionKey)} secondary={<kbd style={{ fontFamily: 'inherit' }}>{s.key}</kbd>} />
               </ListItemButton>
             ))}
           </List>

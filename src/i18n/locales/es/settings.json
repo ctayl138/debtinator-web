@@ -1,0 +1,22 @@
+{
+  "appearance": "Apariencia",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "themeSystem": "Sistema (seguir dispositivo)",
+  "language": "Idioma",
+  "languageEnglish": "English",
+  "languageSpanish": "Español",
+  "income": "Ingresos",
+  "monthlyIncomeLabel": "Ingreso Mensual (opcional)",
+  "exportData": "Exportar Datos",
+  "exportDescription": "Descarga tus datos de deuda como Excel para asesoría o análisis. Los datos permanecen en tu dispositivo.",
+  "exportExcel": "Exportar a Excel",
+  "exportPdf": "Exportar a PDF",
+  "backupRestore": "Respaldo y Restauración",
+  "backupDescription": "Descarga un respaldo JSON de todos tus datos, o restaura desde un respaldo anterior. Los datos permanecen en tu dispositivo.",
+  "downloadBackup": "Descargar respaldo",
+  "restoreFromFile": "Restaurar desde archivo",
+  "invalidBackupFile": "Archivo de respaldo inválido",
+  "help": "Ayuda",
+  "featuresGuide": "Guía de Funciones"
+}

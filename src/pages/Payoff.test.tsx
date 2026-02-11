@@ -32,10 +32,20 @@ jest.mock('@/store/usePayoffFormStore', () => ({
   }),
 }));
 
-jest.mock('@/store/useIncomeStore', () => ({
-  useIncomeStore: (selector: (s: { monthlyIncome: number }) => number) =>
-    selector({ monthlyIncome: mockMonthlyIncome }),
-}));
+jest.mock('@/store/useIncomeStore', () => {
+  const actual = jest.requireActual<typeof import('@/store/useIncomeStore')>('@/store/useIncomeStore');
+  const getMockState = () => ({
+    incomes: mockMonthlyIncome > 0 ? [{ id: '1', name: 'Test', type: 'other' as const, amount: mockMonthlyIncome, createdAt: '' }] : [],
+    addIncome: jest.fn(),
+    updateIncome: jest.fn(),
+    deleteIncome: jest.fn(),
+    setMonthlyIncome: jest.fn(),
+  });
+  return {
+    ...actual,
+    useIncomeStore: (selector: (s: unknown) => unknown) => selector(getMockState()),
+  };
+});
 
 const mockSchedule = {
   totalMonths: 12,
@@ -99,7 +109,7 @@ describe('Payoff', () => {
     mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' }];
     mockMonthlyIncome = 0;
     renderWithProviders(<Payoff />);
-    expect(screen.getByText(/Add your income in Settings/)).toBeInTheDocument();
+    expect(screen.getByText(/Add your income to see/)).toBeInTheDocument();
   });
 
   it('shows income insights when monthly income is set', () => {

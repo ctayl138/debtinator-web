@@ -2,11 +2,13 @@ import type { ExportData } from './exportToExcel';
 import { calculatePayoffSchedule, getDebtSummary } from './payoffCalculations';
 import { formatCurrency } from './formatters';
 import { DEBT_TYPE_LABELS, PAYOFF_METHOD_LABELS, PRINT_DIALOG_TIMEOUT } from './constants';
+import i18n from '@/i18n/config';
 
 /**
  * Build a print-friendly HTML string from export data and open print dialog (user can Save as PDF).
  */
 export function printExportAsPdf(data: ExportData): void {
+  const t = i18n.t.bind(i18n);
   const { debts, monthlyIncome, payoffMethod, monthlyPayment, customOrder } = data;
   const summary = getDebtSummary(debts);
   const payment = parseFloat(String(monthlyPayment)) || 0;
@@ -22,24 +24,24 @@ export function printExportAsPdf(data: ExportData): void {
     : null;
 
   const rows: string[] = [];
-  rows.push('<h1>Debtinator – Debt Summary</h1>');
-  rows.push(`<p>Generated: ${new Date().toLocaleString()}</p>`);
-  rows.push('<h2>Summary</h2><table><tbody>');
-  rows.push(`<tr><td>Total Debt</td><td>${formatCurrency(summary.totalBalance)}</td></tr>`);
-  rows.push(`<tr><td>Total Minimum Payments</td><td>${formatCurrency(summary.totalMinimumPayments)}</td></tr>`);
-  rows.push(`<tr><td>Average APR</td><td>${summary.weightedInterestRate.toFixed(2)}%</td></tr>`);
-  rows.push(`<tr><td>Debt Count</td><td>${summary.count}</td></tr>`);
-  rows.push(`<tr><td>Monthly Income</td><td>${formatCurrency(monthlyIncome)}</td></tr>`);
-  rows.push(`<tr><td>Payoff Method</td><td>${PAYOFF_METHOD_LABELS[payoffMethod] ?? payoffMethod}</td></tr>`);
-  rows.push(`<tr><td>Planned Monthly Payment</td><td>${formatCurrency(payment)}</td></tr>`);
+  rows.push(`<h1>${t('export:pdfTitle')}</h1>`);
+  rows.push(`<p>${t('export:generated', { date: new Date().toLocaleString() })}</p>`);
+  rows.push(`<h2>${t('export:summary')}</h2><table><tbody>`);
+  rows.push(`<tr><td>${t('export:totalDebt')}</td><td>${formatCurrency(summary.totalBalance)}</td></tr>`);
+  rows.push(`<tr><td>${t('export:totalMinPayments')}</td><td>${formatCurrency(summary.totalMinimumPayments)}</td></tr>`);
+  rows.push(`<tr><td>${t('export:averageApr')}</td><td>${summary.weightedInterestRate.toFixed(2)}%</td></tr>`);
+  rows.push(`<tr><td>${t('export:debtCount')}</td><td>${summary.count}</td></tr>`);
+  rows.push(`<tr><td>${t('export:monthlyIncome')}</td><td>${formatCurrency(monthlyIncome)}</td></tr>`);
+  rows.push(`<tr><td>${t('export:payoffMethod')}</td><td>${PAYOFF_METHOD_LABELS[payoffMethod] ?? payoffMethod}</td></tr>`);
+  rows.push(`<tr><td>${t('export:plannedPayment')}</td><td>${formatCurrency(payment)}</td></tr>`);
   if (schedule) {
-    rows.push(`<tr><td>Time to Payoff</td><td>${schedule.totalMonths} months</td></tr>`);
-    rows.push(`<tr><td>Total Interest</td><td>${formatCurrency(schedule.totalInterest)}</td></tr>`);
-    rows.push(`<tr><td>Total Payments</td><td>${formatCurrency(schedule.totalPayments)}</td></tr>`);
+    rows.push(`<tr><td>${t('export:timeToPayoff')}</td><td>${t('export:months', { count: schedule.totalMonths })}</td></tr>`);
+    rows.push(`<tr><td>${t('export:totalInterest')}</td><td>${formatCurrency(schedule.totalInterest)}</td></tr>`);
+    rows.push(`<tr><td>${t('export:totalPayments')}</td><td>${formatCurrency(schedule.totalPayments)}</td></tr>`);
   }
   rows.push('</tbody></table>');
 
-  rows.push('<h2>Debts</h2><table><thead><tr><th>Name</th><th>Type</th><th>Balance</th><th>APR</th><th>Min Payment</th></tr></thead><tbody>');
+  rows.push(`<h2>${t('export:debtsTableTitle')}</h2><table><thead><tr><th>${t('export:colName')}</th><th>${t('export:colType')}</th><th>${t('export:colBalance')}</th><th>${t('export:colApr')}</th><th>${t('export:colMinPayment')}</th></tr></thead><tbody>`);
   debts.forEach((d) => {
     rows.push(
       `<tr><td>${escapeHtml(d.name)}</td><td>${DEBT_TYPE_LABELS[d.type] ?? d.type}</td><td>${formatCurrency(d.balance)}</td><td>${d.interestRate.toFixed(2)}%</td><td>${formatCurrency(d.minimumPayment)}</td></tr>`
@@ -53,7 +55,7 @@ export function printExportAsPdf(data: ExportData): void {
   const win = window.open('', '_blank');
   if (!win) {
     console.warn('Popup blocked – allow popups to export as PDF');
-    alert('Please allow popups for this site to export as PDF');
+    alert(t('export:popupBlocked'));
     return;
   }
 

@@ -12,6 +12,9 @@ describe('Documentation', () => {
     renderWithProviders(<Documentation />);
     expect(screen.getByText('Debts')).toBeInTheDocument();
     expect(screen.getByText('Payoff Plan')).toBeInTheDocument();
+    expect(screen.getByText('Charts')).toBeInTheDocument();
+    expect(screen.getByText('Payoff Timeline')).toBeInTheDocument();
+    expect(screen.getByText('Income')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 });

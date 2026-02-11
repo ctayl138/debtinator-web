@@ -9,6 +9,7 @@ import {
   Box,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useTranslation } from 'react-i18next';
 import type { ImportResult } from '@/utils/importDebts';
 
 export interface ImportDialogProps {
@@ -39,18 +40,21 @@ export default function ImportDialog({
   onConfirm,
   fileInputRef,
 }: ImportDialogProps) {
+  const { t } = useTranslation('debts');
+  const { t: tc } = useTranslation('common');
+
   return (
     <Dialog open={open} onClose={onClose} data-testid="import-debts-dialog">
-      <DialogTitle>Import debts from CSV</DialogTitle>
+      <DialogTitle>{t('importTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Paste comma- or tab-separated data, or upload a CSV. Columns: name, balance, interest rate (%), minimum payment. Optional 5th column: type (credit_card, personal_loan, other).
+          {t('importInstructions')}
         </Typography>
         <TextField
           fullWidth
           multiline
           minRows={4}
-          placeholder="Name, Balance, APR, Min Payment&#10;Card One, 5000, 18.5, 150&#10;Loan Two, 10000, 6, 300"
+          placeholder={t('importPlaceholder')}
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
           sx={{ mb: 1 }}
@@ -58,7 +62,7 @@ export default function ImportDialog({
         />
         <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
           <Button variant="outlined" size="small" onClick={onPreview} data-testid="import-preview-btn">
-            Preview
+            {tc('preview')}
           </Button>
           <Button
             variant="outlined"
@@ -66,7 +70,7 @@ export default function ImportDialog({
             onClick={() => fileInputRef.current?.click()}
             startIcon={<UploadFileIcon />}
           >
-            Choose file
+            {t('importChooseFile')}
           </Button>
           <input
             ref={fileInputRef}
@@ -87,17 +91,17 @@ export default function ImportDialog({
               </Typography>
             )}
             <Typography variant="body2" color="text.secondary">
-              {importResult.rows.length} debt{importResult.rows.length !== 1 ? 's' : ''} to import
-              {importResult.errors.length > 0 ? ` · ${importResult.errors.length} error(s)` : ''}.
+              {t('importToImport', { count: importResult.rows.length })}
+              {importResult.errors.length > 0 ? ` · ${t('importErrors', { count: importResult.errors.length })}` : ''}.
             </Typography>
           </Box>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={onPreview}>Preview</Button>
+        <Button onClick={onClose}>{tc('cancel')}</Button>
+        <Button onClick={onPreview}>{tc('preview')}</Button>
         <Button onClick={onConfirm} variant="contained" disabled={!importResult?.rows.length} data-testid="import-confirm-btn">
-          {importResult?.rows.length ? `Import ${importResult.rows.length} debt${importResult.rows.length !== 1 ? 's' : ''}` : 'Import'}
+          {importResult?.rows.length ? t('importConfirm', { count: importResult.rows.length }) : tc('import')}
         </Button>
       </DialogActions>
     </Dialog>

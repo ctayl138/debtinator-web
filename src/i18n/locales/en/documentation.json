@@ -1,0 +1,15 @@
+{
+  "title": "Features Guide",
+  "debtsTitle": "Debts",
+  "debtsDescription": "Add and edit debts with name, type (Credit Card, Personal Loan, Other), balance, APR, minimum payment, and optional due day. Debts are grouped by type. Click a debt to edit; right-click to delete. Use Import to load from CSV, or press N to add a new debt. All data is stored only in your browser.",
+  "payoffTitle": "Payoff Plan",
+  "payoffDescription": "Choose Snowball (smallest balance first), Avalanche (highest interest first), or Custom order. Enter your total monthly payment and optional start date. The app shows payoff order, total interest, and time until debt-free. Open Timeline and Charts from the menu for a month-by-month schedule and graphs.",
+  "chartsTitle": "Charts",
+  "chartsDescription": "View your payoff visually: a pie chart of current balances by debt, and a line chart of remaining balance over time. Uses the same strategy and monthly payment as the Payoff page. Switch between chart types with the toggle.",
+  "timelineTitle": "Payoff Timeline",
+  "timelineDescription": "See your payoff plan month by month: which debt gets paid, how much goes to principal and interest, and remaining balances. Load more months as needed. Uses the same strategy, payment, and start date as the Payoff page.",
+  "incomeTitle": "Income",
+  "incomeDescription": "Set your optional monthly income for debt-to-income insights on the Payoff page (e.g. what percent of income goes to minimum payments). Data stays in your browser.",
+  "settingsTitle": "Settings",
+  "settingsDescription": "Theme (light, dark, or system) and language (via the menu icon). Export to Excel or PDF (print/save), or use Backup to download and Restore to load a backup. All data stays in your browser and never leaves your device."
+}

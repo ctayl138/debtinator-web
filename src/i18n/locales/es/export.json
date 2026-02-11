@@ -1,0 +1,23 @@
+{
+  "pdfTitle": "Debtinator – Resumen de Deudas",
+  "generated": "Generado: {{date}}",
+  "summary": "Resumen",
+  "totalDebt": "Deuda Total",
+  "totalMinPayments": "Total Pagos Mínimos",
+  "averageApr": "APR Promedio",
+  "debtCount": "Cantidad de Deudas",
+  "monthlyIncome": "Ingreso Mensual",
+  "payoffMethod": "Método de Pago",
+  "plannedPayment": "Pago Mensual Planificado",
+  "timeToPayoff": "Tiempo para Pagar",
+  "months": "{{count}} meses",
+  "totalInterest": "Interés Total",
+  "totalPayments": "Pagos Totales",
+  "debtsTableTitle": "Deudas",
+  "colName": "Nombre",
+  "colType": "Tipo",
+  "colBalance": "Saldo",
+  "colApr": "APR",
+  "colMinPayment": "Pago Mínimo",
+  "popupBlocked": "Permite las ventanas emergentes en este sitio para exportar como PDF"
+}

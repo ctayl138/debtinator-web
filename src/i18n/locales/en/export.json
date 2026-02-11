@@ -1,0 +1,23 @@
+{
+  "pdfTitle": "Debtinator – Debt Summary",
+  "generated": "Generated: {{date}}",
+  "summary": "Summary",
+  "totalDebt": "Total Debt",
+  "totalMinPayments": "Total Minimum Payments",
+  "averageApr": "Average APR",
+  "debtCount": "Debt Count",
+  "monthlyIncome": "Monthly Income",
+  "payoffMethod": "Payoff Method",
+  "plannedPayment": "Planned Monthly Payment",
+  "timeToPayoff": "Time to Payoff",
+  "months": "{{count}} months",
+  "totalInterest": "Total Interest",
+  "totalPayments": "Total Payments",
+  "debtsTableTitle": "Debts",
+  "colName": "Name",
+  "colType": "Type",
+  "colBalance": "Balance",
+  "colApr": "APR",
+  "colMinPayment": "Min Payment",
+  "popupBlocked": "Please allow popups for this site to export as PDF"
+}

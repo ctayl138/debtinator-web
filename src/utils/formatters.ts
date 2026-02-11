@@ -7,8 +7,8 @@
  * @param amount - The amount to format
  * @returns Formatted currency string (e.g., "$1,234.56")
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount: number, locale: string = 'en-US'): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'USD',
   }).format(amount);
@@ -32,8 +32,8 @@ export function formatYAxisLabel(value: number): string {
  * @param monthIndex - Months from current date (0 = current month)
  * @returns Formatted date string (e.g., "Jan 2027")
  */
-export function getMonthYearLabel(monthIndex: number): string {
+export function getMonthYearLabel(monthIndex: number, locale: string = 'en-US'): string {
   const d = new Date();
   d.setMonth(d.getMonth() + monthIndex);
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(locale, { month: 'short', year: 'numeric' });
 }

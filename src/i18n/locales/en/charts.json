@@ -1,0 +1,9 @@
+{
+  "principalVsInterest": "Principal vs Interest",
+  "balanceOverTime": "Balance Over Time",
+  "freedUpOverTime": "Freed Up Income",
+  "principal": "Principal",
+  "interest": "Interest",
+  "emptyNoDebts": "Add debts on the Debts tab, then create a payoff plan to see principal vs interest and balance-over-time charts here.",
+  "emptyNoPlan": "Enter a monthly payment of at least {{amount}} on the Payoff tab to see your charts."
+}

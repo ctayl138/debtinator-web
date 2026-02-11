@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, fireEvent, within } from '@testing-library/react';
+import { screen, fireEvent, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Debts from './Debts';
 import { renderWithProviders } from '@/test-utils';
@@ -122,9 +122,8 @@ describe('Debts', () => {
     ];
     renderWithProviders(<Debts />);
     expect(screen.getByTestId('debts-summary')).toBeInTheDocument();
-    // Text is split across MUI components, use flexible matcher
-    expect(screen.getByText((content, element) => content.includes('Credit Card') && element?.tagName === 'DIV')).toBeInTheDocument();
-    expect(screen.getByText((content, element) => content.includes('Personal Loan') && element?.tagName === 'DIV')).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('Credit Card'))).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('Personal Loan'))).toBeInTheDocument();
     expect(screen.getByText('Card')).toBeInTheDocument();
     expect(screen.getByText('Loan')).toBeInTheDocument();
   });
@@ -142,9 +141,9 @@ describe('Debts', () => {
       },
     ];
     renderWithProviders(<Debts />);
-    expect(screen.getByText((content, element) => content.includes('Credit Card') && element?.tagName === 'DIV')).toBeInTheDocument();
-    // Check for section header with "1 debt" (in ListSubheader)
-    expect(screen.getByText((content, element) => content.includes('1') && content.includes('debt') && element?.className?.includes('ListSubheader'))).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('Credit Card'))).toBeInTheDocument();
+    // Check for section header "Credit Card — 1 debt"
+    expect(screen.getByText('Credit Card — 1 debt')).toBeInTheDocument();
   });
 
   it('renders plural debt label when multiple in section', () => {
@@ -169,9 +168,9 @@ describe('Debts', () => {
       },
     ];
     renderWithProviders(<Debts />);
-    expect(screen.getByText((content, element) => content.includes('Credit Card') && element?.tagName === 'DIV')).toBeInTheDocument();
-    // Check for section header with "2 debts" (in ListSubheader)
-    expect(screen.getByText((content, element) => content.includes('2') && content.includes('debts') && element?.className?.includes('ListSubheader'))).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('Credit Card'))).toBeInTheDocument();
+    // Check for section header "Credit Card — 2 debts"
+    expect(screen.getByText('Credit Card — 2 debts')).toBeInTheDocument();
   });
 
   it('handles debts with missing type and zero balances', () => {
@@ -364,6 +363,26 @@ describe('Debts', () => {
     renderWithProviders(<Debts />);
     fireEvent.click(screen.getByTestId('import-debts-btn'));
     // Mock hook is properly configured, further testing of ImportDialog is in ImportDialog.test.tsx
+  });
+
+  it('imports debts when confirm button is clicked with parsed results', async () => {
+    renderWithProviders(<Debts />);
+    fireEvent.click(screen.getByTestId('import-debts-btn'));
+    const pasteInput = screen.getByTestId('import-paste-input');
+    fireEvent.change(pasteInput, { target: { value: 'Card One, 5000, 18.5, 150' } });
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    expect(mockAddDebt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Card One',
+        balance: 5000,
+        interestRate: 18.5,
+        minimumPayment: 150,
+      })
+    );
   });
 
   it('opens add form when N key is pressed and focus is not in input', () => {

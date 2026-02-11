@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { Box, Typography, Button, Card, CardContent } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import i18n from '@/i18n/config';
 
 interface Props {
   children: ReactNode;
@@ -53,10 +54,10 @@ export default class ErrorBoundary extends Component<Props, State> {
               <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
                 <ErrorOutlineIcon color="error" sx={{ fontSize: 64 }} />
                 <Typography variant="h5" component="h1" gutterBottom>
-                  Something went wrong
+                  {i18n.t('common:errorTitle')}
                 </Typography>
                 <Typography color="text.secondary" textAlign="center">
-                  We encountered an unexpected error. Your data is safe and stored in your browser.
+                  {i18n.t('common:errorDescription')}
                 </Typography>
                 {this.state.error && (
                   <Box
@@ -80,7 +81,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                   </Box>
                 )}
                 <Button variant="contained" onClick={this.handleReset} sx={{ mt: 2 }}>
-                  Return to Home
+                  {i18n.t('common:errorReturnHome')}
                 </Button>
               </Box>
             </CardContent>

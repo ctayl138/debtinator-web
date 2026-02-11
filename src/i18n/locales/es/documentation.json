@@ -1,0 +1,15 @@
+{
+  "title": "Guía de Funciones",
+  "debtsTitle": "Deudas",
+  "debtsDescription": "Agrega y edita deudas con nombre, tipo (Tarjeta de Crédito, Préstamo Personal, Otro), saldo, APR, pago mínimo y día de vencimiento opcional. Las deudas se agrupan por tipo. Haz clic para editar; clic derecho para eliminar. Usa Importar para cargar desde CSV o pulsa N para agregar una deuda. Todos los datos se guardan solo en tu navegador.",
+  "payoffTitle": "Plan de Pago",
+  "payoffDescription": "Elige Bola de Nieve (saldo más pequeño primero), Avalancha (interés más alto primero) u Orden personalizado. Ingresa tu pago mensual total y fecha de inicio opcional. La app muestra el orden de pago, interés total y tiempo hasta quedar libre de deudas. Abre Cronología y Gráficos desde el menú para el plan mes a mes y las gráficas.",
+  "chartsTitle": "Gráficos",
+  "chartsDescription": "Visualiza tu plan de pago: gráfico circular de saldos por deuda y gráfico de líneas del saldo restante en el tiempo. Usa la misma estrategia y pago mensual que la página de Pago. Cambia entre tipos de gráfico con el botón.",
+  "timelineTitle": "Cronología de Pago",
+  "timelineDescription": "Consulta tu plan de pago mes a mes: qué deuda se paga, cuánto a principal e interés y saldos restantes. Carga más meses si hace falta. Usa la misma estrategia, pago y fecha de inicio que la página de Pago.",
+  "incomeTitle": "Ingresos",
+  "incomeDescription": "Configura tu ingreso mensual opcional para el análisis deuda-ingreso en la página de Pago (p. ej. qué porcentaje del ingreso va a pagos mínimos). Los datos permanecen en tu navegador.",
+  "settingsTitle": "Configuración",
+  "settingsDescription": "Tema (claro, oscuro o sistema) e idioma (desde el ícono del menú). Exporta a Excel o PDF (imprimir/guardar) o usa Respaldar para descargar y Restaurar para cargar un respaldo. Todos los datos permanecen en tu navegador y no salen de tu dispositivo."
+}

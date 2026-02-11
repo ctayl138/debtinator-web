@@ -11,8 +11,10 @@ import {
   Tooltip as LineTooltip,
   ResponsiveContainer as LineResponsiveContainer,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { useDebts } from '@/store/useDebtStore';
 import { usePayoffFormStore } from '@/store/usePayoffFormStore';
+import { useLocale } from '@/hooks/useLocale';
 import type { PayoffPlan } from '@/types';
 import { calculatePayoffSchedule } from '@/utils/payoffCalculations';
 import { formatCurrency, formatYAxisLabel, getMonthYearLabel } from '@/utils/formatters';
@@ -21,10 +23,12 @@ import { formatCurrency, formatYAxisLabel, getMonthYearLabel } from '@/utils/for
 export { formatYAxisLabel };
 
 export default function Charts() {
+  const { t } = useTranslation('charts');
+  const locale = useLocale();
   const theme = useTheme();
   const debts = useDebts();
   const { method, monthlyPayment, customOrder } = usePayoffFormStore();
-  const [chartView, setChartView] = useState<'pie' | 'line'>('pie');
+  const [chartView, setChartView] = useState<'pie' | 'line' | 'freed'>('pie');
 
   const totalMinimumPayments = useMemo(
     () => debts.reduce((sum, d) => sum + d.minimumPayment, 0),
@@ -63,32 +67,53 @@ export default function Charts() {
     const primary = theme.palette.primary.main;
     const secondary = theme.palette.secondary.main;
     return [
-      { name: 'Principal', value: Math.round(principal * 100) / 100, color: primary },
-      { name: 'Interest', value: Math.round(interest * 100) / 100, color: secondary },
+      { name: t('principal'), value: Math.round(principal * 100) / 100, color: primary },
+      { name: t('interest'), value: Math.round(interest * 100) / 100, color: secondary },
     ].filter((d) => d.value > 0);
-  }, [schedule, theme.palette.primary.main, theme.palette.secondary.main]);
+  }, [schedule, theme.palette.primary.main, theme.palette.secondary.main, t]);
 
   const lineData = useMemo(() => {
     if (!schedule || schedule.steps.length === 0) return [];
     const points: { month: number; label: string; balance: number }[] = [
-      { month: 0, label: getMonthYearLabel(0), balance: initialTotalBalance },
+      { month: 0, label: getMonthYearLabel(0, locale), balance: initialTotalBalance },
     ];
     for (let i = 0; i < schedule.steps.length; i++) {
       const total = schedule.steps[i].reduce((sum, s) => sum + s.remainingBalance, 0);
       points.push({
         month: i + 1,
-        label: getMonthYearLabel(i + 1),
+        label: getMonthYearLabel(i + 1, locale),
         balance: total,
       });
     }
     return points;
-  }, [schedule, initialTotalBalance]);
+  }, [schedule, initialTotalBalance, locale]);
+
+  const freedUpData = useMemo(() => {
+    if (!schedule || schedule.steps.length === 0 || debts.length === 0) return [];
+    const minByDebtId = new Map(debts.map((d) => [d.id, d.minimumPayment]));
+    const paidOffIds = new Set<string>();
+    const points: { month: number; label: string; freed: number }[] = [
+      { month: 0, label: getMonthYearLabel(0, locale), freed: 0 },
+    ];
+    for (let i = 0; i < schedule.steps.length; i++) {
+      for (const step of schedule.steps[i]) {
+        if (step.remainingBalance === 0) paidOffIds.add(step.debtId);
+      }
+      const freed = [...paidOffIds].reduce((sum, id) => sum + (minByDebtId.get(id) ?? 0), 0);
+      points.push({
+        month: i + 1,
+        label: getMonthYearLabel(i + 1, locale),
+        freed,
+      });
+    }
+    return points;
+  }, [schedule, debts, locale]);
 
   if (debts.length === 0) {
     return (
       <Box py={4} textAlign="center">
         <Typography color="text.secondary">
-          Add debts on the Debts tab, then create a payoff plan to see principal vs interest and balance-over-time charts here.
+          {t('emptyNoDebts')}
         </Typography>
       </Box>
     );
@@ -98,7 +123,7 @@ export default function Charts() {
     return (
       <Box py={4} textAlign="center">
         <Typography color="text.secondary">
-          Enter a monthly payment of at least {formatCurrency(totalMinimumPayments)} on the Payoff tab to see your charts.
+          {t('emptyNoPlan', { amount: formatCurrency(totalMinimumPayments, locale) })}
         </Typography>
       </Box>
     );
@@ -110,12 +135,13 @@ export default function Charts() {
         <ToggleButtonGroup
           value={chartView}
           exclusive
-          onChange={(_, v: 'pie' | 'line' | null) => v && setChartView(v)}
+          onChange={(_, v: 'pie' | 'line' | 'freed' | null) => v && setChartView(v)}
           size="small"
           sx={{ mb: 2 }}
         >
-          <ToggleButton value="pie">Principal vs Interest</ToggleButton>
-          <ToggleButton value="line">Balance Over Time</ToggleButton>
+          <ToggleButton value="pie">{t('principalVsInterest')}</ToggleButton>
+          <ToggleButton value="line">{t('balanceOverTime')}</ToggleButton>
+          <ToggleButton value="freed">{t('freedUpOverTime')}</ToggleButton>
         </ToggleButtonGroup>
 
         {chartView === 'pie' && pieData.length > 0 && (
@@ -129,13 +155,13 @@ export default function Charts() {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                  label={({ name, value }) => `${name}: ${formatCurrency(value, locale)}`}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Tooltip formatter={(v: number) => formatCurrency(v, locale)} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -156,11 +182,38 @@ export default function Charts() {
                   tickFormatter={(v) => formatYAxisLabel(v)}
                   tick={{ fontSize: 10 }}
                 />
-                <LineTooltip formatter={(v: number) => formatCurrency(v)} />
+                <LineTooltip formatter={(v: number) => formatCurrency(v, locale)} />
                 <Line
                   type="monotone"
                   dataKey="balance"
                   stroke={theme.palette.primary.main}
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </LineResponsiveContainer>
+          </Box>
+        )}
+
+        {chartView === 'freed' && freedUpData.length > 0 && (
+          <Box height={280}>
+            <LineResponsiveContainer width="100%" height="100%">
+              <LineChart data={freedUpData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tickFormatter={(v) => formatYAxisLabel(v)}
+                  tick={{ fontSize: 10 }}
+                />
+                <LineTooltip formatter={(v: number) => formatCurrency(v, locale)} />
+                <Line
+                  type="monotone"
+                  dataKey="freed"
+                  stroke={theme.palette.secondary.main}
                   strokeWidth={2}
                   dot={false}
                 />

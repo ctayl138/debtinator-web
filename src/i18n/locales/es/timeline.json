@@ -1,0 +1,11 @@
+{
+  "emptyNoDebts": "Agrega deudas en la pestaña Deudas, luego establece un pago mensual en la pestaña Pago para ver tu cronología aquí.",
+  "emptyNoPlan": "Ingresa un pago mensual (al menos el total de tus mínimos) en la pestaña Pago para ver tu calendario mes a mes.",
+  "title": "Cronología de Pago — {{months}} meses en total",
+  "totalInterest": "Interés total: {{amount}}",
+  "monthLabel": "Mes {{number}} — {{date}}",
+  "totalPaid": "Total pagado: {{amount}} (interés: {{interest}})",
+  "paymentRemaining": "{{payment}} → {{remaining}} restante",
+  "loadMore": "Cargar más meses",
+  "debtFree": "¡Estás libre de deudas en {{months}} meses!"
+}

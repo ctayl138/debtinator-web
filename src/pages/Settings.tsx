@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PaletteIcon from '@mui/icons-material/Palette';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import HelpIcon from '@mui/icons-material/Help';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -24,19 +23,15 @@ import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import BackupIcon from '@mui/icons-material/Backup';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '@/store/useThemeStore';
-import { useIncomeStore } from '@/store/useIncomeStore';
+import { useIncomeStore, selectMonthlyIncome } from '@/store/useIncomeStore';
 import { useDebtStore, useDebts, migrateDebts } from '@/store/useDebtStore';
 import { usePayoffFormStore } from '@/store/usePayoffFormStore';
+import { useLanguageStore } from '@/store/useLanguageStore';
 import { createExportWorkbook, downloadWorkbook } from '@/utils/exportToExcel';
 import { printExportAsPdf } from '@/utils/exportToPdf';
 import type { ThemeMode } from '@/theme/tokens';
-
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ReactNode }[] = [
-  { value: 'light', label: 'Light', icon: <LightModeIcon /> },
-  { value: 'dark', label: 'Dark', icon: <DarkModeIcon /> },
-  { value: 'system', label: 'System (match device)', icon: <SettingsBrightnessIcon /> },
-];
 
 export function getExportStartIcon(isExporting: boolean): React.ReactNode {
   return isExporting ? <CircularProgress size={16} /> : <FileDownloadIcon />;
@@ -47,29 +42,22 @@ export function isExportDisabled(isExporting: boolean): boolean {
 }
 
 export default function Settings() {
+  const { t } = useTranslation('settings');
+  const { t: tc } = useTranslation('common');
   const mode = useThemeStore((s) => s.mode);
   const setMode = useThemeStore((s) => s.setMode);
-  const monthlyIncome = useIncomeStore((s) => s.monthlyIncome);
-  const setMonthlyIncome = useIncomeStore((s) => s.setMonthlyIncome);
+  const monthlyIncome = useIncomeStore(selectMonthlyIncome);
   const debts = useDebts();
   const { method: payoffMethod, monthlyPayment, customOrder } = usePayoffFormStore();
-  const [incomeInput, setIncomeInput] = useState(
-    monthlyIncome > 0 ? monthlyIncome.toString() : ''
-  );
   const [isExporting, setIsExporting] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const restoreInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    setIncomeInput(monthlyIncome > 0 ? monthlyIncome.toString() : '');
-  }, [monthlyIncome]);
-
-  const handleIncomeBlur = () => {
-    const parsed = parseFloat(incomeInput);
-    const value = isNaN(parsed) || parsed < 0 ? 0 : parsed;
-    setMonthlyIncome(value);
-    setIncomeInput(value > 0 ? value.toString() : '');
-  };
+  const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ReactNode }[] = [
+    { value: 'light', label: t('themeLight'), icon: <LightModeIcon /> },
+    { value: 'dark', label: t('themeDark'), icon: <DarkModeIcon /> },
+    { value: 'system', label: t('themeSystem'), icon: <SettingsBrightnessIcon /> },
+  ];
 
   const paymentNum = parseFloat(String(monthlyPayment)) || 0;
   const exportPayload = {
@@ -100,8 +88,10 @@ export default function Settings() {
   const handleBackup = () => {
     const backup = {
       debts: useDebtStore.getState().debts,
-      monthlyIncome: useIncomeStore.getState().monthlyIncome,
+      monthlyIncome: selectMonthlyIncome(useIncomeStore.getState()),
       theme: useThemeStore.getState().mode,
+      language: useLanguageStore.getState().language,
+      incomes: useIncomeStore.getState().incomes,
       payoffForm: {
         method: usePayoffFormStore.getState().method,
         monthlyPayment: usePayoffFormStore.getState().monthlyPayment,
@@ -129,11 +119,16 @@ export default function Settings() {
         const migrated = migrateDebts(data.debts);
         useDebtStore.setState({ debts: migrated });
       }
-      if (typeof data.monthlyIncome === 'number') {
+      if (data.incomes && Array.isArray(data.incomes)) {
+        useIncomeStore.setState({ incomes: data.incomes });
+      } else if (typeof data.monthlyIncome === 'number' && data.monthlyIncome > 0) {
         useIncomeStore.getState().setMonthlyIncome(data.monthlyIncome);
       }
       if (data.theme && ['light', 'dark', 'system'].includes(data.theme)) {
         useThemeStore.getState().setMode(data.theme);
+      }
+      if (data.language && ['en', 'es'].includes(data.language)) {
+        useLanguageStore.getState().setLanguage(data.language);
       }
       if (data.payoffForm) {
         const pf = data.payoffForm;
@@ -143,7 +138,7 @@ export default function Settings() {
         if (pf.startDate) usePayoffFormStore.getState().setStartDate(pf.startDate);
       }
     } catch {
-      setRestoreError('Invalid backup file');
+      setRestoreError(t('invalidBackupFile'));
     }
     e.target.value = '';
   };
@@ -154,7 +149,7 @@ export default function Settings() {
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box display="flex" alignItems="center" gap={1}>
             <PaletteIcon color="action" />
-            <Typography>Appearance</Typography>
+            <Typography>{t('appearance')}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
@@ -176,35 +171,13 @@ export default function Settings() {
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box display="flex" alignItems="center" gap={1}>
-            <AttachMoneyIcon color="action" />
-            <Typography>Income</Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails>
-          <TextField
-            fullWidth
-            label="Monthly Income (optional)"
-            value={incomeInput}
-            onChange={(e) => setIncomeInput(e.target.value)}
-            onBlur={handleIncomeBlur}
-            type="number"
-            inputProps={{ inputMode: 'decimal', min: 0, 'data-testid': 'income-input' }}
-            InputProps={{ startAdornment: '$' }}
-            placeholder="0.00"
-          />
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Box display="flex" alignItems="center" gap={1}>
             <FileDownloadIcon color="action" />
-            <Typography>Export Data</Typography>
+            <Typography>{t('exportData')}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Download your debt data as Excel for counseling or analysis. Data stays on your device.
+            {t('exportDescription')}
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={1}>
             <Button
@@ -214,7 +187,7 @@ export default function Settings() {
               disabled={isExportDisabled(isExporting)}
               data-testid="export-excel-button"
             >
-              Export to Excel
+              {t('exportExcel')}
             </Button>
             <Button
               variant="outlined"
@@ -222,7 +195,7 @@ export default function Settings() {
               onClick={handleExportPdf}
               data-testid="export-pdf-button"
             >
-              Export to PDF
+              {t('exportPdf')}
             </Button>
           </Box>
         </AccordionDetails>
@@ -232,16 +205,16 @@ export default function Settings() {
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box display="flex" alignItems="center" gap={1}>
             <BackupIcon color="action" />
-            <Typography>Backup &amp; Restore</Typography>
+            <Typography>{t('backupRestore')}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Download a JSON backup of all your data, or restore from a previous backup. Data stays on your device.
+            {t('backupDescription')}
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={1} alignItems="center">
             <Button variant="outlined" startIcon={<BackupIcon />} onClick={handleBackup} data-testid="backup-button">
-              Download backup
+              {t('downloadBackup')}
             </Button>
             <Button
               variant="outlined"
@@ -249,7 +222,7 @@ export default function Settings() {
               onClick={() => restoreInputRef.current?.click()}
               data-testid="restore-button"
             >
-              Restore from file
+              {t('restoreFromFile')}
             </Button>
             <input
               ref={restoreInputRef}
@@ -272,12 +245,12 @@ export default function Settings() {
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box display="flex" alignItems="center" gap={1}>
             <HelpIcon color="action" />
-            <Typography>Help</Typography>
+            <Typography>{t('help')}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
           <Button component={Link} to="/documentation" startIcon={<HelpIcon />} data-testid="help-documentation-link">
-            Features Guide
+            {t('featuresGuide')}
           </Button>
         </AccordionDetails>
       </Accordion>

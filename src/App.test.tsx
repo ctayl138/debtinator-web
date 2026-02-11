@@ -37,6 +37,11 @@ jest.mock('@/pages/PayoffTimeline', () => ({
   default: () => <div>TimelinePage</div>,
 }));
 
+jest.mock('@/pages/Income', () => ({
+  __esModule: true,
+  default: () => <div>IncomePage</div>,
+}));
+
 jest.mock('@/pages/Settings', () => ({
   __esModule: true,
   default: () => <div>SettingsPage</div>,
@@ -82,6 +87,15 @@ describe('App', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('TimelinePage')).toBeInTheDocument();
+  });
+
+  it('routes to income', () => {
+    render(
+      <MemoryRouter initialEntries={['/income']}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('IncomePage')).toBeInTheDocument();
   });
 
   it('routes to settings', () => {

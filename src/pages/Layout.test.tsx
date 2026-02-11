@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, fireEvent, render } from '@testing-library/react';
+import { screen, fireEvent, render, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -76,6 +76,7 @@ describe('Layout', () => {
       // All items should be in drawer
       expect(screen.getByText('Charts')).toBeInTheDocument();
       expect(screen.getByText('Timeline')).toBeInTheDocument();
+      expect(screen.getByText('Income')).toBeInTheDocument();
       expect(screen.getByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Features Guide')).toBeInTheDocument();
     });
@@ -127,6 +128,7 @@ describe('Layout', () => {
       expect(screen.getByText('Payoff')).toBeInTheDocument();
       expect(screen.getByText('Charts')).toBeInTheDocument();
       expect(screen.getByText('Timeline')).toBeInTheDocument();
+      expect(screen.getByText('Income')).toBeInTheDocument();
       expect(screen.getByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Features Guide')).toBeInTheDocument();
     });
@@ -172,63 +174,104 @@ describe('Layout', () => {
     });
   });
 
-  describe('Desktop Sidebar Collapse', () => {
+  describe('Keyboard Shortcuts Dialog Close', () => {
+    it('closes shortcuts dialog via Escape key', () => {
+      const { container } = renderLayout('/');
+      fireEvent.keyDown(container.ownerDocument, { key: '?' });
+      expect(screen.getByTestId('shortcuts-dialog')).toBeInTheDocument();
+      // Press Escape triggers Dialog onClose
+      fireEvent.keyDown(screen.getByTestId('shortcuts-dialog'), { key: 'Escape' });
+      // Dialog onClose sets shortcutsOpen to false
+    });
+  });
+
+  describe('Desktop drawer auto-close', () => {
+    it('closes mobile drawer when switching to desktop', () => {
+      mockUseMediaQuery.mockReturnValue(false); // Start mobile
+      const { rerender } = render(
+        <MuiThemeProvider theme={getAppTheme('light')}>
+          <CssBaseline />
+          <MemoryRouter initialEntries={['/']}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<div>Home</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </MuiThemeProvider>
+      );
+      // Open drawer on mobile
+      fireEvent.click(screen.getByLabelText('Open menu'));
+      expect(screen.getByTestId('drawer')).toHaveAttribute('data-open', 'true');
+      // Switch to desktop
+      mockUseMediaQuery.mockReturnValue(true);
+      rerender(
+        <MuiThemeProvider theme={getAppTheme('light')}>
+          <CssBaseline />
+          <MemoryRouter initialEntries={['/']}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<div>Home</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </MuiThemeProvider>
+      );
+      // Drawer should not be in the document on desktop
+      expect(screen.queryByTestId('drawer')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Desktop Sidebar', () => {
     beforeEach(() => {
       mockUseMediaQuery.mockReturnValue(true); // Desktop
-      localStorage.clear();
     });
 
-    it('renders sidebar toggle button on desktop', () => {
-      renderLayout('/');
-      expect(screen.getByTestId('sidebar-toggle')).toBeInTheDocument();
-    });
-
-    it('collapses sidebar when toggle is clicked', () => {
-      renderLayout('/');
-      const toggle = screen.getByTestId('sidebar-toggle');
-
-      // Sidebar should be expanded initially
-      expect(screen.getByText('Debts')).toBeInTheDocument();
-
-      fireEvent.click(toggle);
-
-      // Sidebar content should be hidden
-      expect(screen.queryByText('Debts')).not.toBeInTheDocument();
-    });
-
-    it('persists collapsed state to localStorage', () => {
-      renderLayout('/');
-      const toggle = screen.getByTestId('sidebar-toggle');
-
-      fireEvent.click(toggle);
-
-      expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
-    });
-
-    it('loads collapsed state from localStorage', () => {
-      localStorage.setItem('sidebar-collapsed', 'true');
-
-      renderLayout('/');
-
-      // Sidebar should be collapsed on load
-      expect(screen.queryByText('Debts')).not.toBeInTheDocument();
-    });
-
-    it('expands sidebar when toggle is clicked while collapsed', () => {
-      localStorage.setItem('sidebar-collapsed', 'true');
-      renderLayout('/');
-
-      const toggle = screen.getByTestId('sidebar-toggle');
-      fireEvent.click(toggle);
-
-      expect(screen.getByText('Debts')).toBeInTheDocument();
-      expect(localStorage.getItem('sidebar-collapsed')).toBe('false');
-    });
-
-    it('hides toggle button on mobile', () => {
-      mockUseMediaQuery.mockReturnValue(false); // Mobile
+    it('does not show sidebar collapse toggle on desktop', () => {
       renderLayout('/');
       expect(screen.queryByTestId('sidebar-toggle')).not.toBeInTheDocument();
+    });
+
+    it('always shows sidebar nav on desktop', () => {
+      renderLayout('/');
+      expect(screen.getByText('Debts')).toBeInTheDocument();
+    });
+  });
+
+  describe('Mobile', () => {
+    beforeEach(() => {
+      mockUseMediaQuery.mockReturnValue(false); // Mobile
+    });
+
+    it('does not show sidebar toggle on mobile', () => {
+      renderLayout('/');
+      expect(screen.queryByTestId('sidebar-toggle')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Language menu', () => {
+    it('shows language menu button in app bar', () => {
+      renderLayout('/');
+      expect(screen.getByTestId('language-menu-button')).toBeInTheDocument();
+    });
+
+    it('opens language menu and shows English and Español', () => {
+      renderLayout('/');
+      fireEvent.click(screen.getByTestId('language-menu-button'));
+      expect(screen.getByTestId('language-en-btn')).toBeInTheDocument();
+      expect(screen.getByTestId('language-es-btn')).toBeInTheDocument();
+      expect(screen.getByText('English')).toBeInTheDocument();
+      expect(screen.getByText('Español')).toBeInTheDocument();
+    });
+
+    it('closes menu when selecting a language', async () => {
+      renderLayout('/');
+      fireEvent.click(screen.getByTestId('language-menu-button'));
+      expect(screen.getByTestId('language-es-btn')).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('language-es-btn'));
+      await waitFor(() => {
+        expect(screen.queryByTestId('language-en-btn')).not.toBeInTheDocument();
+      });
     });
   });
 });

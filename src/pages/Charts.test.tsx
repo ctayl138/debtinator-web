@@ -89,6 +89,7 @@ describe('Charts', () => {
     renderWithProviders(<Charts />);
     expect(screen.getByText('Principal vs Interest')).toBeInTheDocument();
     expect(screen.getByText('Balance Over Time')).toBeInTheDocument();
+    expect(screen.getByText('Freed Up Income')).toBeInTheDocument();
     expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
   });
 
@@ -97,6 +98,14 @@ describe('Charts', () => {
     mockMonthlyPayment = '100';
     renderWithProviders(<Charts />);
     fireEvent.click(screen.getByText('Balance Over Time'));
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+  });
+
+  it('switches to freed up income chart when Freed Up Income is clicked', () => {
+    mockDebts = [{ id: '1', name: 'Card', type: 'credit_card', balance: 1000, interestRate: 15, minimumPayment: 30, createdAt: '' }];
+    mockMonthlyPayment = '100';
+    renderWithProviders(<Charts />);
+    fireEvent.click(screen.getByText('Freed Up Income'));
     expect(screen.getByTestId('line-chart')).toBeInTheDocument();
   });
 

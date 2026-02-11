@@ -1,0 +1,11 @@
+{
+  "emptyNoDebts": "Add debts on the Debts tab, then set a monthly payment on the Payoff tab to see your timeline here.",
+  "emptyNoPlan": "Enter a monthly payment (at least the total of your minimums) on the Payoff tab to see your month-by-month schedule.",
+  "title": "Payoff Timeline — {{months}} months total",
+  "totalInterest": "Total interest: {{amount}}",
+  "monthLabel": "Month {{number}} — {{date}}",
+  "totalPaid": "Total paid: {{amount}} (interest: {{interest}})",
+  "paymentRemaining": "{{payment}} → {{remaining}} left",
+  "loadMore": "Load more months",
+  "debtFree": "You're debt-free in {{months}} months!"
+}

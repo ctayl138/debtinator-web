@@ -38,3 +38,13 @@ export interface PayoffSchedule {
   totalInterest: number;
   totalPayments: number;
 }
+
+export type IncomeType = 'salary' | 'side_gig' | 'investment' | 'other';
+
+export interface Income {
+  id: string;
+  name: string;
+  type: IncomeType;
+  amount: number;
+  createdAt: string;
+}

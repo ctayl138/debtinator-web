@@ -3,7 +3,7 @@ module.exports = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
   testMatch: ['**/src/**/*.test.{ts,tsx}'],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/src/setupI18nTest.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css)$': '<rootDir>/jest.styleMock.cjs',
@@ -26,6 +26,8 @@ module.exports = {
     '!src/**/__mocks__/**',
     '!src/vite-env.d.ts',
     '!src/main.tsx',
+    '!src/i18n/config.ts',
+    '!src/setupI18nTest.ts',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'text-summary', 'lcov', 'html'],

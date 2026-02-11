@@ -23,9 +23,11 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { useTranslation } from 'react-i18next';
 import { useDebts } from '@/store/useDebtStore';
 import { usePayoffFormStore } from '@/store/usePayoffFormStore';
-import { useIncomeStore } from '@/store/useIncomeStore';
+import { useIncomeStore, selectMonthlyIncome } from '@/store/useIncomeStore';
+import { useLocale } from '@/hooks/useLocale';
 import type { Debt, PayoffMethod, PayoffPlan } from '@/types';
 import { calculatePayoffSchedule } from '@/utils/payoffCalculations';
 import { formatCurrency } from '@/utils/formatters';
@@ -36,10 +38,13 @@ function defaultCustomOrder(debts: Debt[]): string[] {
 }
 
 export default function Payoff() {
+  const { t } = useTranslation('payoff');
+  const { t: tc } = useTranslation('common');
+  const locale = useLocale();
   const debts = useDebts();
   const { method, monthlyPayment, customOrder, startDate, setMethod, setMonthlyPayment, setCustomOrder, setStartDate } =
     usePayoffFormStore();
-  const monthlyIncome = useIncomeStore((s) => s.monthlyIncome);
+  const monthlyIncome = useIncomeStore(selectMonthlyIncome);
 
   const totalMinimumPayments = useMemo(
     () => debts.reduce((sum, d) => sum + d.minimumPayment, 0),
@@ -103,18 +108,18 @@ export default function Payoff() {
       customOrder: orderedIds,
     });
     return [
-      { name: 'Snowball', ...snowball, method: 'snowball' as const },
-      { name: 'Avalanche', ...avalanche, method: 'avalanche' as const },
-      { name: 'Custom', ...custom, method: 'custom' as const },
+      { name: tc('methodSnowball'), ...snowball, method: 'snowball' as const },
+      { name: tc('methodAvalanche'), ...avalanche, method: 'avalanche' as const },
+      { name: tc('methodCustom'), ...custom, method: 'custom' as const },
     ];
-  }, [debts, paymentNum, orderedIds, hasValidPayment]);
+  }, [debts, paymentNum, orderedIds, hasValidPayment, tc]);
 
   if (debts.length === 0) {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" gap={2} py={4} data-testid="payoff-empty">
-        <Typography variant="h6">No debts yet</Typography>
+        <Typography variant="h6">{tc('noDebtsYet')}</Typography>
         <Typography color="text.secondary" textAlign="center">
-          Add your debts on the Debts tab, then come back here to pick a payoff method and see your timeline.
+          {t('emptyState')}
         </Typography>
       </Box>
     );
@@ -125,7 +130,7 @@ export default function Payoff() {
       <Card data-testid="payoff-method-card">
         <CardContent>
           <Typography variant="subtitle1" gutterBottom>
-            Payoff Method
+            {t('payoffMethod')}
           </Typography>
           <ToggleButtonGroup
             value={method}
@@ -134,14 +139,14 @@ export default function Payoff() {
             size="small"
             fullWidth
           >
-            <ToggleButton value="snowball">Snowball</ToggleButton>
-            <ToggleButton value="avalanche">Avalanche</ToggleButton>
-            <ToggleButton value="custom">Custom</ToggleButton>
+            <ToggleButton value="snowball">{tc('methodSnowball')}</ToggleButton>
+            <ToggleButton value="avalanche">{tc('methodAvalanche')}</ToggleButton>
+            <ToggleButton value="custom">{tc('methodCustom')}</ToggleButton>
           </ToggleButtonGroup>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {method === 'snowball' && 'Pay off smallest balances first for quick wins'}
-            {method === 'avalanche' && 'Pay off highest interest rates first to save money'}
-            {method === 'custom' && 'Drag or use arrows to set the order you will pay off debts'}
+            {method === 'snowball' && t('snowballDesc')}
+            {method === 'avalanche' && t('avalancheDesc')}
+            {method === 'custom' && t('customDesc')}
           </Typography>
           {method === 'custom' && (
             <List dense sx={{ mt: 1 }} data-testid="custom-order-list">
@@ -157,7 +162,7 @@ export default function Payoff() {
                           size="small"
                           onClick={() => moveCustomOrder(index, -1)}
                           disabled={index === 0}
-                          aria-label={`Move ${debt.name} up`}
+                          aria-label={t('moveUp', { name: debt.name })}
                         >
                           <ArrowUpwardIcon fontSize="small" />
                         </IconButton>
@@ -165,7 +170,7 @@ export default function Payoff() {
                           size="small"
                           onClick={() => moveCustomOrder(index, 1)}
                           disabled={index === orderedIds.length - 1}
-                          aria-label={`Move ${debt.name} down`}
+                          aria-label={t('moveDown', { name: debt.name })}
                         >
                           <ArrowDownwardIcon fontSize="small" />
                         </IconButton>
@@ -174,7 +179,7 @@ export default function Payoff() {
                   >
                     <ListItemText
                       primary={`${index + 1}. ${debt.name}`}
-                      secondary={formatCurrency(debt.balance)}
+                      secondary={formatCurrency(debt.balance, locale)}
                     />
                   </ListItem>
                 );
@@ -187,11 +192,11 @@ export default function Payoff() {
       <Card>
         <CardContent>
           <Typography variant="subtitle1" gutterBottom>
-            Monthly Payment
+            {t('monthlyPayment')}
           </Typography>
           <TextField
             fullWidth
-            label="Total Monthly Payment"
+            label={t('totalMonthlyPayment')}
             value={monthlyPayment}
             onChange={(e) => setMonthlyPayment(e.target.value)}
             type="number"
@@ -200,14 +205,14 @@ export default function Payoff() {
             placeholder="0.00"
           />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Minimum payments total: {formatCurrency(totalMinimumPayments)}
+            {t('minPaymentsTotal', { amount: formatCurrency(totalMinimumPayments, locale) })}
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-            Your plan is saved automatically.
+            {t('planSavedAuto')}
           </Typography>
           <Box sx={{ mt: 2 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              First payment date (optional)
+              {t('firstPaymentDate')}
             </Typography>
             <TextField
               type="date"
@@ -219,13 +224,18 @@ export default function Payoff() {
               sx={{ maxWidth: 200 }}
             />
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-              Timeline will show real months (e.g. March 2027) instead of &quot;Month 1&quot;
+              {t('realMonthsHint')}
             </Typography>
           </Box>
           {monthlyIncome === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              Add your income in Settings to see debt-to-income insights
-            </Typography>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                {t('addIncomeHint')}{' '}
+                <Link to="/income" style={{ fontWeight: 600 }}>
+                  {t('addIncomeLink')}
+                </Link>
+              </Typography>
+            </Box>
           )}
         </CardContent>
       </Card>
@@ -234,24 +244,24 @@ export default function Payoff() {
         <Card data-testid="income-insights-card">
           <CardContent>
             <Typography variant="subtitle1" gutterBottom>
-              Income Insights
+              {t('incomeInsights')}
             </Typography>
             <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Minimum payments:</Typography>
+              <Typography>{t('minPaymentsLabel')}</Typography>
               <Typography fontWeight={600}>
-                {((totalMinimumPayments / monthlyIncome) * 100).toFixed(1)}% of income
+                {t('ofIncome', { percent: ((totalMinimumPayments / monthlyIncome) * 100).toFixed(1) })}
               </Typography>
             </Box>
             {schedule && parseFloat(monthlyPayment) > 0 && (
               <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography>Your payment:</Typography>
+                <Typography>{t('yourPaymentLabel')}</Typography>
                 <Typography fontWeight={600}>
-                  {((parseFloat(monthlyPayment) / monthlyIncome) * 100).toFixed(1)}% of income
+                  {t('ofIncome', { percent: ((parseFloat(monthlyPayment) / monthlyIncome) * 100).toFixed(1) })}
                 </Typography>
               </Box>
             )}
             <Typography variant="body2" color="text.secondary">
-              Experts suggest keeping debt payments under 36% of gross income
+              {t('expertAdvice')}
             </Typography>
           </CardContent>
         </Card>
@@ -261,17 +271,17 @@ export default function Payoff() {
         <Card data-testid="method-comparison-card">
           <CardContent>
             <Typography variant="subtitle1" gutterBottom>
-              Compare methods
+              {t('compareMethods')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Same debts, same monthly payment — see how each method affects timeline and interest.
+              {t('compareDescription')}
             </Typography>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Method</TableCell>
-                  <TableCell align="right">Months</TableCell>
-                  <TableCell align="right">Total interest</TableCell>
+                  <TableCell>{t('tableMethod')}</TableCell>
+                  <TableCell align="right">{t('tableMonths')}</TableCell>
+                  <TableCell align="right">{t('tableTotalInterest')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -283,7 +293,7 @@ export default function Payoff() {
                   >
                     <TableCell>{row.name}</TableCell>
                     <TableCell align="right">{row.totalMonths}</TableCell>
-                    <TableCell align="right">{formatCurrency(row.totalInterest)}</TableCell>
+                    <TableCell align="right">{formatCurrency(row.totalInterest, locale)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -296,28 +306,28 @@ export default function Payoff() {
         <Card>
           <CardContent>
             <Typography variant="subtitle1" gutterBottom>
-              Payoff Summary
+              {t('payoffSummary')}
             </Typography>
             <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Time to Payoff:</Typography>
+              <Typography>{t('timeToPayoff')}</Typography>
               <Typography fontWeight={600}>
-                {schedule.totalMonths} months ({(schedule.totalMonths / 12).toFixed(1)} years)
+                {t('monthsYears', { months: schedule.totalMonths, years: (schedule.totalMonths / 12).toFixed(1) })}
               </Typography>
             </Box>
             <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Total Interest:</Typography>
-              <Typography fontWeight={600}>{formatCurrency(schedule.totalInterest)}</Typography>
+              <Typography>{t('totalInterest')}</Typography>
+              <Typography fontWeight={600}>{formatCurrency(schedule.totalInterest, locale)}</Typography>
             </Box>
             <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>Total Payments:</Typography>
-              <Typography fontWeight={600}>{formatCurrency(schedule.totalPayments)}</Typography>
+              <Typography>{t('totalPayments')}</Typography>
+              <Typography fontWeight={600}>{formatCurrency(schedule.totalPayments, locale)}</Typography>
             </Box>
             <Box display="flex" gap={1}>
               <Button component={Link} to="/payoff-timeline" variant="outlined" startIcon={<TimelineIcon />}>
-                Timeline
+                {t('timeline')}
               </Button>
               <Button component={Link} to="/charts" variant="outlined" startIcon={<BarChartIcon />}>
-                Charts
+                {t('charts')}
               </Button>
             </Box>
           </CardContent>
