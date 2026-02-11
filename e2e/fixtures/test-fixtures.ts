@@ -3,6 +3,7 @@ import {
   DebtsPage,
   PayoffPage,
   ChartsPage,
+  IncomePage,
   SettingsPage,
   TimelinePage,
   DocumentationPage,
@@ -15,6 +16,7 @@ export const test = base.extend<{
   debtsPage: DebtsPage;
   payoffPage: PayoffPage;
   chartsPage: ChartsPage;
+  incomePage: IncomePage;
   settingsPage: SettingsPage;
   timelinePage: TimelinePage;
   documentationPage: DocumentationPage;
@@ -27,6 +29,9 @@ export const test = base.extend<{
   },
   chartsPage: async ({ page }, use) => {
     await use(new ChartsPage(page));
+  },
+  incomePage: async ({ page }, use) => {
+    await use(new IncomePage(page));
   },
   settingsPage: async ({ page }, use) => {
     await use(new SettingsPage(page));

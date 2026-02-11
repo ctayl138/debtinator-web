@@ -144,6 +144,7 @@ describe('exportToPdf', () => {
 
     it('warns when popup is blocked', () => {
       openSpy.mockReturnValue(null);
+      const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
       const data: ExportData = {
         debts: [sampleDebt],
@@ -155,6 +156,7 @@ describe('exportToPdf', () => {
       printExportAsPdf(data);
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Popup blocked'));
+      alertSpy.mockRestore();
     });
 
     it('escapes HTML in debt names', () => {

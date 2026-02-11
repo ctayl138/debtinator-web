@@ -120,50 +120,30 @@ test.describe('Navigation', () => {
     await payoffPage.waitForReady();
   });
 
-  test('can collapse and expand desktop sidebar', async ({ page, debtsPage }) => {
-    // Desktop only - sidebar toggle appears on larger viewports
-    // Skip on mobile viewports
+  test.skip('can collapse and expand desktop sidebar', async ({ page, debtsPage }) => {
+    // Sidebar collapse/expand was removed on desktop; toggle is hidden (hamburger only on mobile).
     const width = page.viewportSize()?.width ?? 0;
-    if (width < 900) {
-      test.skip();
-    }
-
+    if (width < 900) test.skip();
     await debtsPage.goto();
-
-    // Sidebar should be visible initially
     const sidebarNav = page.getByText('Charts');
     await expect(sidebarNav).toBeVisible();
-
-    // Click toggle button to collapse
     const toggleButton = page.getByTestId('sidebar-toggle');
     await expect(toggleButton).toBeVisible();
     await toggleButton.click();
-
-    // Sidebar should be hidden
     await expect(sidebarNav).not.toBeVisible();
-
-    // Click toggle again to expand
     await toggleButton.click();
-
-    // Sidebar should be visible again
     await expect(sidebarNav).toBeVisible();
   });
 
-  test('sidebar collapsed state persists across navigation', async ({
+  test.skip('sidebar collapsed state persists across navigation', async ({
     page,
     debtsPage,
     payoffPage,
   }) => {
-    // Desktop only - sidebar toggle appears on larger viewports
-    // Skip on mobile viewports
+    // Sidebar collapse was removed on desktop.
     const width = page.viewportSize()?.width ?? 0;
-    if (width < 900) {
-      test.skip();
-    }
-
+    if (width < 900) test.skip();
     await debtsPage.goto();
-
-    // Collapse the sidebar
     const toggleButton = page.getByTestId('sidebar-toggle');
     await toggleButton.click();
     await expect(page.getByText('Charts')).not.toBeVisible();

@@ -2,6 +2,7 @@ export { BasePage } from './BasePage';
 export { DebtsPage } from './DebtsPage';
 export { PayoffPage } from './PayoffPage';
 export { ChartsPage } from './ChartsPage';
+export { IncomePage } from './IncomePage';
 export { SettingsPage } from './SettingsPage';
 export { TimelinePage } from './TimelinePage';
 export { DocumentationPage } from './DocumentationPage';

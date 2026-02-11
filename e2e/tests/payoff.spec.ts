@@ -103,10 +103,10 @@ test.describe('Payoff - Navigation Icons', () => {
 });
 
 test.describe('Payoff - Income Insights', () => {
-  test('shows income insights when income is set in settings', async ({
+  test('shows income insights when income is set on Income page', async ({
     debtsPage,
     payoffPage,
-    settingsPage,
+    incomePage,
   }) => {
     await debtsPage.goto();
     await debtsPage.addDebt({
@@ -118,13 +118,9 @@ test.describe('Payoff - Income Insights', () => {
     await debtsPage.navigateToTab(/payoff/i);
     await payoffPage.waitForReady();
 
-    await payoffPage.openSettings();
-    await settingsPage.waitForReady();
-    await settingsPage.expandIncome();
-    await settingsPage.setMonthlyIncome('5000');
-
-    await settingsPage.goBack();
-    await payoffPage.waitForReady();
+    await incomePage.goto();
+    await incomePage.addIncome({ amount: '5000' });
+    await payoffPage.goto();
     await payoffPage.setMonthlyPayment('100');
 
     await payoffPage.assertIncomeInsightsVisible();

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { localStorageAdapter } from './storage';
-import type { Income, IncomeType } from '@/types';
+import type { Income } from '@/types';
 
 const generateId = () =>
   Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -48,7 +48,7 @@ function migrateFromLegacy(persisted: unknown): { incomes: Income[] } {
 
 export const useIncomeStore = create<IncomeState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       incomes: [],
 
       addIncome: (data) => {

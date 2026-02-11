@@ -31,10 +31,10 @@ import { useTranslation } from 'react-i18next';
 
 const NAV_ICONS: { path: string; labelKey: string; icon: React.ReactNode }[] = [
   { path: '/', labelKey: 'navDebts', icon: <ListIcon /> },
+  { path: '/income', labelKey: 'navIncome', icon: <AttachMoneyIcon /> },
   { path: '/payoff', labelKey: 'navPayoff', icon: <TrendingUpIcon /> },
   { path: '/charts', labelKey: 'navCharts', icon: <BarChartIcon /> },
   { path: '/payoff-timeline', labelKey: 'navTimeline', icon: <CalendarMonthIcon /> },
-  { path: '/income', labelKey: 'navIncome', icon: <AttachMoneyIcon /> },
   { path: '/settings', labelKey: 'navSettings', icon: <SettingsIcon /> },
   { path: '/documentation', labelKey: 'navDocs', icon: <DescriptionIcon /> },
 ];
@@ -78,7 +78,7 @@ export default function Layout() {
 
   const sidebarWidth = isDesktop ? DRAWER_WIDTH : 0;
 
-  const primaryNavItems = NAV_ICONS.slice(0, 2); // Debts, Payoff
+  const primaryNavItems = NAV_ICONS.slice(0, 2); // Debts, Income
   const currentNav = primaryNavItems.find((item) => item.path === location.pathname)?.path ?? primaryNavItems[0].path;
 
   const drawerContent = (

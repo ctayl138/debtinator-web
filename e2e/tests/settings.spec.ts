@@ -42,10 +42,11 @@ test.describe('Settings', () => {
     await settingsPage.assertThemeOptionsVisible();
   });
 
-  test('Income section allows setting monthly income', async ({ settingsPage }) => {
-    await settingsPage.expandIncome();
-    await settingsPage.setMonthlyIncome('5000');
-    await expect(settingsPage.getByTestId('income-input')).toHaveValue('5000');
+  test('Income page allows adding income', async ({ incomePage }) => {
+    await incomePage.goto();
+    await incomePage.addIncome({ amount: '5000' });
+    await expect(incomePage.getByTestId('income-summary')).toBeVisible({ timeout: 5000 });
+    await expect(incomePage.getByTestId('income-summary').getByText(/\$5,000\.00/)).toBeVisible();
   });
 
   test('Export Data section shows export button', async ({ settingsPage }) => {
@@ -68,7 +69,7 @@ test.describe('Settings', () => {
 
   test('Help section has Features Guide link', async ({ settingsPage }) => {
     await settingsPage.assertHelpSectionVisible();
-    await expect(settingsPage.getByText('Features Guide')).toBeVisible();
+    await expect(settingsPage.getByTestId('help-documentation-link')).toBeVisible();
   });
 
   test('Features Guide navigates to documentation', async ({

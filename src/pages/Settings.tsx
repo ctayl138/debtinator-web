@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   Typography,
-  TextField,
   Button,
   List,
   ListItemButton,
@@ -43,7 +42,6 @@ export function isExportDisabled(isExporting: boolean): boolean {
 
 export default function Settings() {
   const { t } = useTranslation('settings');
-  const { t: tc } = useTranslation('common');
   const mode = useThemeStore((s) => s.mode);
   const setMode = useThemeStore((s) => s.setMode);
   const monthlyIncome = useIncomeStore(selectMonthlyIncome);
