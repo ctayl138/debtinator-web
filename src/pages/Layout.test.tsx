@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, fireEvent, render, waitFor } from '@testing-library/react';
+import { screen, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -73,12 +73,13 @@ describe('Layout', () => {
     it('opens drawer and shows all navigation items', () => {
       renderLayout('/');
       fireEvent.click(screen.getByLabelText('Open menu'));
-      // All items should be in drawer
-      expect(screen.getByText('Charts')).toBeInTheDocument();
-      expect(screen.getByText('Timeline')).toBeInTheDocument();
-      expect(screen.getByText('Income')).toBeInTheDocument();
-      expect(screen.getByText('Settings')).toBeInTheDocument();
-      expect(screen.getByText('Features Guide')).toBeInTheDocument();
+      const drawer = screen.getByTestId('drawer');
+      // All items should be in drawer (query within drawer to avoid matching bottom nav)
+      expect(within(drawer).getByText('Charts')).toBeInTheDocument();
+      expect(within(drawer).getByText('Timeline')).toBeInTheDocument();
+      expect(within(drawer).getByText('Income')).toBeInTheDocument();
+      expect(within(drawer).getByText('Settings')).toBeInTheDocument();
+      expect(within(drawer).getByText('Features Guide')).toBeInTheDocument();
     });
 
     it('closes drawer on navigation', () => {
