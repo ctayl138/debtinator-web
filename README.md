@@ -56,18 +56,18 @@ Open [http://localhost:5173](http://localhost:5173).
 | `pnpm test:e2e` | Run Playwright E2E tests       |
 | `pnpm test:e2e:ui` | Run Playwright E2E tests with UI |
 
-## Deployment (Cloudflare Pages)
+## Deployment (Cloudflare)
 
-This app is a static SPA built with Vite. Recommended free hosting: **Cloudflare Pages**.
+This app is a static SPA built with Vite. Deploy to **Cloudflare** using Wrangler so the app and optional **Feedback API** (GitHub issues) work together:
 
-**Build settings:**
-- Build command: `pnpm install && pnpm run build`
-- Output directory: `dist`
-- Node version: `20`
+```bash
+pnpm run build
+pnpm exec wrangler deploy
+```
 
-Cloudflare Pages auto-detects pnpm from `pnpm-lock.yaml`.
+Set **GITHUB_TOKEN** and **GITHUB_REPO** in the Worker’s Variables and secrets (see [Development Guide – Deploying with Feedback API](docs/DEVELOPMENT.md#deploying-with-feedback-api-cloudflare-worker)).
 
-**SPA routing:** A redirect rule is included at `public/_redirects` to route all paths to `index.html`.
+For static-only hosting (no feedback API), use any static host and point it at the `dist/` folder. Cloudflare Pages can be used with build command `pnpm install && pnpm run build` and output `dist`; for the feedback feature you need to use `wrangler deploy` instead so the Worker is included.
 
 ## Features
 
@@ -75,7 +75,7 @@ Cloudflare Pages auto-detects pnpm from `pnpm-lock.yaml`.
 - **Payoff** — Snowball or Avalanche method; enter monthly payment; see payoff summary.
 - **Charts** — Principal vs interest (pie), balance over time (line).
 - **Timeline** — Month-by-month payoff schedule.
-- **Settings** — Light/dark/system theme, optional monthly income, export to Excel, features guide.
+- **Settings** — Light/dark/system theme, optional monthly income, export to Excel, features guide, and **feedback** (report bug / request enhancement via GitHub issue when deployed with the Worker).
 
 ## Project structure
 

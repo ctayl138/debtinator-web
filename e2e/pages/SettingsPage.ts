@@ -109,4 +109,16 @@ export class SettingsPage extends BasePage {
       this.getByTestId('help-documentation-link')
     ).toBeVisible({ timeout: 3000 });
   }
+
+  async expandFeedback(): Promise<void> {
+    await this.waitForDrawerClosed();
+    await this.page.getByRole('button', { name: /^feedback$/i }).first().click({ force: true });
+    await expect(this.getByTestId('feedback-submit')).toBeVisible({ timeout: 5000 });
+  }
+
+  async assertFeedbackFormVisible(): Promise<void> {
+    await expect(this.getByTestId('feedback-title')).toBeVisible();
+    await expect(this.getByTestId('feedback-description')).toBeVisible();
+    await expect(this.getByTestId('feedback-submit')).toBeVisible();
+  }
 }

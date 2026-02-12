@@ -80,4 +80,11 @@ test.describe('Settings', () => {
     await documentationPage.waitForReady();
     await documentationPage.assertContentVisible();
   });
+
+  test('Feedback section shows form with title, description, and submit', async ({
+    settingsPage,
+  }) => {
+    await settingsPage.expandFeedback();
+    await settingsPage.assertFeedbackFormVisible();
+  });
 });

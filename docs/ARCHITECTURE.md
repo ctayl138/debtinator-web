@@ -19,7 +19,7 @@ System design, patterns, and project structure for Debtinator Web.
 
 ## Overview
 
-Debtinator Web follows a **feature-based architecture** with clear separation of concerns. All data stays in the browser; there is no backend.
+Debtinator Web follows a **feature-based architecture** with clear separation of concerns. All debt and user data stays in the browser; there is no backend for core features. An optional **Cloudflare Worker** can be deployed alongside the static app to handle **Feedback** (report bug / request enhancement) by creating GitHub issues; the Worker is the only server-side component and only receives the title and description the user types.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -74,7 +74,7 @@ debtinator-web/
 │   │   ├── Payoff.tsx          # Payoff method and summary
 │   │   ├── Charts.tsx          # Pie and line charts (Recharts)
 │   │   ├── PayoffTimeline.tsx  # Month-by-month schedule
-│   │   ├── Settings.tsx        # Theme, income, export, help
+│   │   ├── Settings.tsx        # Theme, income, export, help, feedback
 │   │   └── Documentation.tsx   # In-app features guide
 │   │
 │   ├── store/                  # Zustand state stores
@@ -93,11 +93,15 @@ debtinator-web/
 │   │
 │   ├── utils/                  # Business logic & helpers
 │   │   ├── payoffCalculations.ts
-│   │   └── exportToExcel.ts
+│   │   ├── exportToExcel.ts
+│   │   └── feedbackApi.ts       # Submit feedback to /api/feedback (Worker)
 │   │
 │   ├── App.tsx                 # React Router routes
 │   ├── main.tsx                # Entry (React root, Router, ThemeProvider)
 │   └── index.css               # Global styles
+│
+├── worker/                     # Cloudflare Worker (optional)
+│   └── index.ts                # POST /api/feedback → GitHub issue
 │
 ├── docs/                       # Documentation
 │   ├── ARCHITECTURE.md
@@ -279,6 +283,7 @@ localStorage.setItem(key, jsonString)
 
 ## Data & Privacy
 
-- **No backend**: No server, no database, no user accounts.
+- **No backend for core app**: No server, no database, no user accounts. Debt and settings stay in the browser.
 - **localStorage only**: Debts, theme, income stored in browser under keys prefixed with `debtinator-`.
 - **Export**: Generated in browser and downloaded via Blob; no upload. Users own their data; clearing site data removes it.
+- **Feedback (optional)**: When the app is deployed with the Worker, Settings → Feedback sends only the title and description the user types to `POST /api/feedback`; the Worker creates a GitHub issue. No debt data or other app state is sent.

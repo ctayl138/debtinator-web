@@ -8,6 +8,7 @@ Comprehensive guide to all features in Debtinator Web.
 - [Payoff Planning](#payoff-planning)
 - [Data Visualization](#data-visualization)
 - [Settings & Customization](#settings--customization)
+- [Feedback](#feedback)
 
 ---
 
@@ -234,11 +235,22 @@ All data is stored **only in your browser** using localStorage:
 
 > **Important**: Clearing your browser data (cookies/storage) will remove your debts and settings. There is no cloud backup. Export to Excel if you want a backup.
 
+### Feedback
+
+Report a bug or suggest an improvement directly from the app:
+
+1. Open **Settings** and expand the **Feedback** section.
+2. Choose **Report a bug** or **Request enhancement**.
+3. Enter a **Title** and optional **Description**.
+4. Click **Submit**.
+
+When the app is deployed with the optional feedback API (e.g. Cloudflare Worker), your submission creates a GitHub issue so the maintainer can track it. No debt or personal data is sent—only the title and description you enter. When running locally, the feedback form is available but the API is not; you can open your repo’s GitHub Issues and create an issue manually if needed.
+
 ---
 
 ## Help
 
-From the menu, click **Features Guide** to open the in-app documentation page with a short overview of features.
+From the menu, click **Features Guide** to open the in-app documentation page. In Settings you’ll also find the **Feedback** section for reporting bugs or requesting enhancements.
 
 ---
 

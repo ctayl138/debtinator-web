@@ -1,9 +1,12 @@
-# Deploy static site (Vite build output) to Cloudflare
+# Deploy static site (Vite build output) + Worker API to Cloudflare
 # Run: pnpm run build && pnpm exec wrangler deploy
+# Set secrets: wrangler secret put GITHUB_TOKEN, wrangler secret put GITHUB_REPO (e.g. "owner/repo")
 name = "debtinator-web"
 compatibility_date = "2026-02-03"
+main = "./worker/index.ts"
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 # Serve index.html for client-side routes (SPA); avoids _redirects infinite loop
 not_found_handling = "single-page-application"

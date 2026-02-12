@@ -158,6 +158,18 @@ Debtinator Web is a **static site**. Deploy the contents of `dist/` to any stati
 | **AWS S3 + CloudFront** | Upload `dist/` to S3; optionally put behind CloudFront |
 | **Any static host** | Serve `dist/` as static files |
 
+### Deploying with Feedback API (Cloudflare Worker)
+
+To enable **Report bug / Request enhancement** from Settings (creating GitHub issues), deploy using **Wrangler** so the Worker and static assets are both published:
+
+1. Build: `pnpm run build`
+2. Deploy: `pnpm exec wrangler deploy`
+3. In the Cloudflare dashboard (Workers & Pages → your worker → Settings → Variables and secrets), add:
+   - **GITHUB_TOKEN** – GitHub Personal Access Token with Issues read/write for the repo
+   - **GITHUB_REPO** – Repository in `owner/repo` form (e.g. `yourusername/debtinator-web`)
+
+The Worker serves the static app and handles `POST /api/feedback` to create issues.
+
 ### Environment Variables
 
 No environment variables are required for the core app. All data is client-side (localStorage). If you add analytics or feature flags later, use `import.meta.env` (Vite) and prefix with `VITE_` for client-exposed values.

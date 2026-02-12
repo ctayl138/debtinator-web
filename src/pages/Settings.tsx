@@ -11,11 +11,17 @@ import {
   AccordionSummary,
   AccordionDetails,
   CircularProgress,
+  TextField,
+  ToggleButtonGroup,
+  ToggleButton,
+  Alert,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PaletteIcon from '@mui/icons-material/Palette';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import HelpIcon from '@mui/icons-material/Help';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
@@ -30,6 +36,7 @@ import { usePayoffFormStore } from '@/store/usePayoffFormStore';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { createExportWorkbook, downloadWorkbook } from '@/utils/exportToExcel';
 import { printExportAsPdf } from '@/utils/exportToPdf';
+import { submitFeedback, type FeedbackType } from '@/utils/feedbackApi';
 import type { ThemeMode } from '@/theme/tokens';
 
 export function getExportStartIcon(isExporting: boolean): React.ReactNode {
@@ -50,6 +57,11 @@ export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const restoreInputRef = useRef<HTMLInputElement>(null);
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{ kind: 'success' | 'error'; text: string; url?: string } | null>(null);
 
   const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ReactNode }[] = [
     { value: 'light', label: t('themeLight'), icon: <LightModeIcon /> },
@@ -139,6 +151,29 @@ export default function Settings() {
       setRestoreError(t('invalidBackupFile'));
     }
     e.target.value = '';
+  };
+
+  const handleSubmitFeedback = async () => {
+    setFeedbackMessage(null);
+    const title = feedbackTitle.trim() || (feedbackType === 'bug' ? t('reportBug') : t('requestEnhancement'));
+    setFeedbackSubmitting(true);
+    try {
+      const { url } = await submitFeedback({
+        type: feedbackType,
+        title,
+        description: feedbackDescription.trim(),
+      });
+      setFeedbackMessage({ kind: 'success', text: t('feedbackSuccess'), url });
+      setFeedbackTitle('');
+      setFeedbackDescription('');
+    } catch (err) {
+      setFeedbackMessage({
+        kind: 'error',
+        text: err instanceof Error ? err.message : t('feedbackError'),
+      });
+    } finally {
+      setFeedbackSubmitting(false);
+    }
   };
 
   return (
@@ -250,6 +285,76 @@ export default function Settings() {
           <Button component={Link} to="/documentation" startIcon={<HelpIcon />} data-testid="help-documentation-link">
             {t('featuresGuide')}
           </Button>
+        </AccordionDetails>
+      </Accordion>
+
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <BugReportIcon color="action" />
+            <Typography>{t('feedback')}</Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            {t('feedbackDescription')}
+          </Typography>
+          <ToggleButtonGroup
+            value={feedbackType}
+            exclusive
+            onChange={(_, v) => v != null && setFeedbackType(v)}
+            size="small"
+            sx={{ mb: 2 }}
+          >
+            <ToggleButton value="bug" aria-label={t('reportBug')}>
+              <BugReportIcon sx={{ mr: 0.5 }} /> {t('reportBug')}
+            </ToggleButton>
+            <ToggleButton value="enhancement" aria-label={t('requestEnhancement')}>
+              <LightbulbIcon sx={{ mr: 0.5 }} /> {t('requestEnhancement')}
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Box display="flex" flexDirection="column" gap={2}>
+            <TextField
+              label={t('feedbackTitle')}
+              value={feedbackTitle}
+              onChange={(e) => setFeedbackTitle(e.target.value)}
+              placeholder={feedbackType === 'bug' ? t('reportBug') : t('requestEnhancement')}
+              size="small"
+              fullWidth
+              inputProps={{ 'data-testid': 'feedback-title' }}
+            />
+            <TextField
+              label={t('feedbackDescriptionLabel')}
+              value={feedbackDescription}
+              onChange={(e) => setFeedbackDescription(e.target.value)}
+              multiline
+              rows={3}
+              size="small"
+              fullWidth
+              inputProps={{ 'data-testid': 'feedback-description' }}
+            />
+            {feedbackMessage && (
+              <Alert severity={feedbackMessage.kind} data-testid="feedback-message">
+                {feedbackMessage.text}
+                {feedbackMessage.url && (
+                  <Box component="span" sx={{ display: 'block', mt: 0.5 }}>
+                    <Button size="small" href={feedbackMessage.url} target="_blank" rel="noopener noreferrer">
+                      Open issue
+                    </Button>
+                  </Box>
+                )}
+              </Alert>
+            )}
+            <Button
+              variant="contained"
+              onClick={handleSubmitFeedback}
+              disabled={feedbackSubmitting}
+              startIcon={feedbackSubmitting ? <CircularProgress size={20} color="inherit" /> : undefined}
+              data-testid="feedback-submit"
+            >
+              {t('submitFeedback')}
+            </Button>
+          </Box>
         </AccordionDetails>
       </Accordion>
     </Box>

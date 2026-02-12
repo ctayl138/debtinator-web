@@ -18,5 +18,14 @@
   "restoreFromFile": "Restaurar desde archivo",
   "invalidBackupFile": "Archivo de respaldo inválido",
   "help": "Ayuda",
-  "featuresGuide": "Guía de Funciones"
+  "featuresGuide": "Guía de Funciones",
+  "feedback": "Comentarios",
+  "feedbackDescription": "Reporta un error o sugiere una mejora. Se crea un issue en GitHub.",
+  "reportBug": "Reportar un error",
+  "requestEnhancement": "Pedir mejora",
+  "feedbackTitle": "Título",
+  "feedbackDescriptionLabel": "Descripción (opcional)",
+  "submitFeedback": "Enviar",
+  "feedbackSuccess": "Issue creado. Puedes verlo en GitHub.",
+  "feedbackError": "No se pudo crear el issue. Intenta de nuevo o abre GitHub Issues manualmente."
 }
