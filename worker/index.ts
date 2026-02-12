@@ -3,10 +3,6 @@
  * all other requests to static assets (SPA). Only invoked when no asset matches.
  */
 
-interface Fetcher {
-  fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
-}
-
 export interface Env {
   ASSETS: Fetcher;
   GITHUB_TOKEN: string;
@@ -33,8 +29,14 @@ async function handleApi(request: Request, url: URL, env: Env): Promise<Response
 }
 
 async function createFeedbackIssue(request: Request, env: Env): Promise<Response> {
-  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
-    return jsonResponse({ error: 'Feedback not configured' }, 503);
+  const missing: string[] = [];
+  if (!env.GITHUB_TOKEN?.trim()) missing.push('GITHUB_TOKEN');
+  if (!env.GITHUB_REPO?.trim()) missing.push('GITHUB_REPO');
+  if (missing.length > 0) {
+    return jsonResponse(
+      { error: 'Feedback not configured', missing },
+      503
+    );
   }
   let body: { type?: string; title?: string; description?: string };
   try {
